@@ -1,0 +1,48 @@
+
+<Root>
+<Urunler>
+<Urun>
+<UrunKartiID>4</UrunKartiID>
+<UrunAdi>Miguel Artegas MAG150 Klasik Gitar</UrunAdi>
+<OnYazi>
+<![CDATA[ ]]>
+</OnYazi>
+<Aciklama>
+<![CDATA[ <STYLE> table { font-family: arial, sans-serif; border-collapse: collapse; width: 100%; max-width: 400px; } td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; } tr:nth-child(even) { background-color: #dddddd; } </STYLE> <TABLE> <TBODY> <TR> <TD>Arka ve Yanlar</TD> <TD>Maun</TD></TR> <TR> <TD>Ön Kapak</TD> <TD>Ladin</TD></TR> <TR> <TD>Klavye </TD> <TD>Gül</TD></TR> <TR> <TD>Burgu</TD> <TD>Pirinç</TD></TR></TBODY></TABLE> ]]>
+</Aciklama>
+<Marka>Miguel Artegas</Marka>
+<SatisBirimi/>
+<KategoriID>19</KategoriID>
+<Kategori>Klasik Gitar</Kategori>
+<KategoriTree>Telli Enstrumanlar/Gitar/Klasik Gitar</KategoriTree>
+<UrunUrl>https://www.maskemuzik.com/miguel-artegas-klasik-gitar-masif-agac-gul-klavye-4</UrunUrl>
+<Resimler>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-1c5510.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-eeaa14.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-989-a9.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-a323b4.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-4a-896.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar--5464-.jpg</Resim>
+<Resim>https://static.ticimax.cloud/40835/Uploads/UrunResimleri/buyuk/miguel-artegas-mag150-klasik-gitar-b4-398.jpg</Resim>
+</Resimler>
+<UrunSecenek>
+<Secenek>
+<VaryasyonID>4</VaryasyonID>
+<StokKodu>MAG150</StokKodu>
+<Barkod>8682983104849</Barkod>
+<StokAdedi>3</StokAdedi>
+<AlisFiyati>11000,00</AlisFiyati>
+<SatisFiyati>11000,00</SatisFiyati>
+<IndirimliFiyat>0,00</IndirimliFiyat>
+<KDVDahil>true</KDVDahil>
+<KdvOrani>20</KdvOrani>
+<ParaBirimi>TL</ParaBirimi>
+<ParaBirimiKodu>TRY</ParaBirimiKodu>
+<Desi>0</Desi>
+<EkSecenekOzellik/>
+</Secenek>
+</UrunSecenek>
+<TeknikDetaylar/>
+</Urun>
+</Urunler>
+</Root>

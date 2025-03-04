@@ -1,0 +1,37 @@
+// Sipariş modeli
+model Order {
+  id              String      @id @default(cuid())
+  orderId         String      @unique
+  status          String      // pending_payment, processing, shipped, delivered, cancelled
+  totalAmount     Float
+  paymentMethod   String      // creditCard, bankTransfer
+  paymentStatus   String      // pending, completed, failed
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress String
+  city            String
+  zipCode         String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Sipariş ürün modeli
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  name      String
+  price     Float
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+} 

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "07314cf8-b2ae-49d4-9062-7c390da0e1ed",
+    "orderId": "ORDER_1740860441626_623",
+    "status": "pending_payment",
+    "totalAmount": 11900,
+    "paymentMethod": "bankTransfer",
+    "paymentStatus": "pending",
+    "customerName": "yigit polat",
+    "customerEmail": "yigitcpolat@gmail.com",
+    "customerPhone": "05320550762",
+    "shippingAddress": "hilmipasa cad oyak c site lale apt 16/1",
+    "city": "istanbul",
+    "zipCode": "32724",
+    "createdAt": "2025-03-01T20:20:41.627Z",
+    "items": [
+      {
+        "id": "dd9bb629-f791-4846-8ef3-209cef410866",
+        "productId": "5",
+        "name": "Miguel Artegas MAG170 Klasik Gitar",
+        "price": 11900,
+        "quantity": 1
+      }
+    ]
+  }
+]
