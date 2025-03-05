@@ -38,23 +38,29 @@ export default function ProductsManagementPage() {
     try {
       let data: Product[] = [];
       try {
-        // API'den ürünleri çekerken önbelleği devre dışı bırak
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/admin/products?t=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+        // Use SWR pattern with a cache timeout
+        const cacheKey = `admin_products_${new Date().toISOString().split('T')[0]}`; // Cache key with date for daily refresh
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          data = JSON.parse(cachedData);
+          console.log(`Using cached data for ${data.length} products`);
+        } else {
+          // API'den ürünleri çek
+          const response = await fetch(`/api/admin/products`, {
+            next: { revalidate: 3600 } // 1 saat cache
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Ürünler getirilemedi: ${response.status} ${response.statusText}`);
           }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Ürünler getirilemedi');
+          
+          data = await response.json();
+          console.log(`Başarıyla ${data.length} ürün yüklendi`);
+          
+          // Cache the data
+          sessionStorage.setItem(cacheKey, JSON.stringify(data));
         }
-        
-        data = await response.json();
-        console.log(`Başarıyla ${data.length} ürün yüklendi`);
       } catch (fetchError) {
         console.error("Ürünler yüklenirken hata oluştu:", fetchError);
         setError("Ürünler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.");

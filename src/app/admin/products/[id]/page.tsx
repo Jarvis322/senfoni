@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Product } from "@/services/productService";
 import { getProductById, updateProduct, deleteProduct } from "@/services/productService";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface ProductEditPageProps {
   params: {
@@ -441,11 +442,13 @@ export default function ProductEditPage({ params }: ProductEditPageProps) {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           {formData.images && formData.images.map((image, index) => (
-                            <div key={index} className="relative border border-gray-300 rounded-md overflow-hidden">
-                              <img
+                            <div key={index} className="relative border border-gray-300 rounded-md overflow-hidden h-40">
+                              <Image
                                 src={image}
                                 alt={`Ürün görseli ${index + 1}`}
-                                className="w-full h-40 object-cover"
+                                className="object-cover"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 300px"
                               />
                               <div className="absolute top-2 right-2 flex space-x-2">
                                 <button

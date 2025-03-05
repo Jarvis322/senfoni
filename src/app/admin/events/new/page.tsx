@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from "react";
-import Link from "next/link";
-import { Event, createEvent } from "@/services/eventService";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createEvent, Event } from "@/services/eventService";
 import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaMoneyBillWave, FaTicketAlt, FaStar } from "react-icons/fa";
+import Image from "next/image";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -281,10 +282,12 @@ export default function NewEventPage() {
                       
                       <div className="border border-gray-300 rounded-md p-4">
                         <div className="aspect-w-16 aspect-h-9 mb-4">
-                          <img 
+                          <Image 
                             src={formData.image} 
                             alt="Etkinlik görseli önizleme" 
                             className="object-cover rounded-md"
+                            width={800}
+                            height={500}
                           />
                         </div>
                         <p className="text-sm text-gray-500">

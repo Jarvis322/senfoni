@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Event, getEventById, updateEvent } from "@/services/eventService";
-import { useRouter } from "next/navigation";
 import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaMoneyBillWave, FaTicketAlt, FaStar } from "react-icons/fa";
+import Image from "next/image";
 
 export default function EventEditPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -363,12 +362,15 @@ export default function EventEditPage({ params }: { params: { id: string } }) {
                       </div>
                       
                       <div className="border border-gray-300 rounded-md p-4">
-                        <div className="aspect-w-16 aspect-h-9 mb-4">
-                          <img 
-                            src={formData.image || ''} 
-                            alt="Etkinlik görseli önizleme" 
-                            className="object-cover rounded-md"
-                          />
+                        <div className="aspect-w-16 aspect-h-9 mb-4 relative h-48">
+                          {formData.image && (
+                            <Image 
+                              src={formData.image} 
+                              alt="Etkinlik görseli önizleme" 
+                              className="object-cover rounded-md"
+                              fill
+                            />
+                          )}
                         </div>
                         <p className="text-sm text-gray-500">
                           Görsel önizleme.

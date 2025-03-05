@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getEventById, deleteEvent } from '@/services/eventService';
+import { getEventById, deleteEvent, Event } from '@/services/eventService';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -13,7 +13,7 @@ export default function DeleteEventPage({ params }: { params: { id: string } }) 
   
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 

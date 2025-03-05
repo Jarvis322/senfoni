@@ -1,18 +1,14 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { fetchLayoutSettings } from "@/services/layoutService";
 import { getAllEvents, deleteEvent, Event } from "@/services/eventService";
 import Link from "next/link";
 import Image from "next/image";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
 import { FaPlus, FaEdit, FaTrash, FaStar, FaRegStar, FaCalendarAlt, FaMapMarkerAlt, FaFilter, FaSearch, FaSort, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [layoutSettings, setLayoutSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -37,7 +33,6 @@ export default function AdminEventsPage() {
       try {
         // Separate try-catch blocks for each data fetch to handle errors independently
         let eventsData: Event[] = [];
-        let layoutData = {};
         
         try {
           eventsData = await getAllEvents();
@@ -48,19 +43,8 @@ export default function AdminEventsPage() {
           eventsData = []; // Empty array as fallback
         }
         
-        try {
-          layoutData = await fetchLayoutSettings();
-        } catch (layoutError) {
-          console.error("Düzen ayarları yüklenirken hata oluştu:", layoutError);
-          if (!error) { // Only set if not already set by events error
-            setError("Düzen ayarları yüklenirken bir hata oluştu, ancak diğer veriler gösteriliyor.");
-          }
-          layoutData = {}; // Empty object as fallback
-        }
-        
         setEvents(eventsData);
         setFilteredEvents(eventsData);
-        setLayoutSettings(layoutData);
         
         // Benzersiz lokasyonları çıkar
         const uniqueLocations = Array.from(

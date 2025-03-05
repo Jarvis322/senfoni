@@ -4,15 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FeaturedProducts } from '@/services/layoutService';
+import { Product } from '@/services/productService';
 import { useSearchParams } from 'next/navigation';
-
-// Product tipi tanımı
-interface Product {
-  id: string;
-  name: string;
-  price: string;
-  image?: string;
-}
+import Image from 'next/image';
 
 // Client Component for the form
 function FeaturedProductsForm({ initialData, allProducts }: { initialData: FeaturedProducts, allProducts: Product[] }) {
@@ -173,14 +167,19 @@ function FeaturedProductsForm({ initialData, allProducts }: { initialData: Featu
                   <li key={product.id} className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center">
                       {product.image && (
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
-                          className="w-10 h-10 object-cover rounded-md mr-3"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/100?text=Ürün';
-                          }}
-                        />
+                        <div className="relative w-10 h-10 mr-3">
+                          <Image 
+                            src={product.image} 
+                            alt={product.name} 
+                            className="object-cover rounded-md"
+                            fill
+                            sizes="40px"
+                            onError={(e) => {
+                              // @ts-ignore - Type safety for onError event
+                              e.target.src = 'https://placehold.co/100?text=Ürün';
+                            }}
+                          />
+                        </div>
                       )}
                       <div>
                         <p className="text-sm font-medium text-gray-900">{product.name}</p>

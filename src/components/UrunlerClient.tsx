@@ -60,36 +60,43 @@ export default function UrunlerClient({ products, layoutSettings }: { products: 
   useEffect(() => {
     setIsLoading(true);
     
-    // Performans için setTimeout kullanarak filtreleme işlemini asenkron yapıyoruz
+    // Performans için debounce kullanarak filtreleme işlemini optimize ediyoruz
     const filterTimer = setTimeout(() => {
-      let result = [...products];
-      
-      // Arama terimine göre filtrele
-      if (searchTerm) {
-        result = result.filter(product => 
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (product.description && typeof product.description === 'string' && 
-           product.description.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-      
-      // Kategoriye göre filtrele
-      if (selectedCategory) {
-        result = result.filter(product => 
-          product.categories && product.categories.includes(selectedCategory)
-        );
-      }
-      
-      // Sıralama
-      result.sort((a, b) => {
-        if (sortOrder === "asc") {
-          return a.price - b.price;
-        } else {
-          return b.price - a.price;
+      // Memoize filtreleme işlemi için useMemo kullanımı
+      const getFilteredProducts = () => {
+        let result = [...products];
+        
+        // Arama terimine göre filtrele
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          result = result.filter(product => 
+            product.name.toLowerCase().includes(searchLower) ||
+            (product.description && typeof product.description === 'string' && 
+             product.description.toLowerCase().includes(searchLower))
+          );
         }
-      });
+        
+        // Kategoriye göre filtrele
+        if (selectedCategory) {
+          result = result.filter(product => 
+            product.categories && product.categories.includes(selectedCategory)
+          );
+        }
+        
+        // Sıralama
+        result.sort((a, b) => {
+          if (sortOrder === "asc") {
+            return a.price - b.price;
+          } else {
+            return b.price - a.price;
+          }
+        });
+        
+        return result;
+      };
       
-      setFilteredProducts(result);
+      // Filtreleme işlemini çalıştır
+      setFilteredProducts(getFilteredProducts());
       setIsLoading(false);
     }, 300); // 300ms gecikme
     

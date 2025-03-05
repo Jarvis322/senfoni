@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AboutSection } from '@/services/layoutService';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 
 // Client Component for the form
 function AboutSectionForm({ initialData }: { initialData: AboutSection }) {
@@ -122,13 +123,16 @@ function AboutSectionForm({ initialData }: { initialData: AboutSection }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Görsel Önizleme</label>
           {formData.image ? (
-            <div className="border border-gray-300 rounded-md overflow-hidden h-64 bg-gray-100">
-              <img 
+            <div className="border border-gray-300 rounded-md overflow-hidden h-64 bg-gray-100 relative">
+              <Image 
                 src={formData.image} 
                 alt="Görsel önizleme" 
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 800px"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://placehold.co/800x400?text=Görsel+Yüklenemedi';
+                  // @ts-ignore - Type safety for onError event
+                  e.target.src = 'https://placehold.co/800x400?text=Görsel+Yüklenemedi';
                 }}
               />
             </div>

@@ -100,49 +100,77 @@ const defaultLayoutSettings: LayoutSettings = {
   }
 };
 
+// Helper function to process settings from database
+function processSettings(settings: any[]): LayoutSettings {
+  const result = {...defaultLayoutSettings};
+  
+  // Process each setting and organize by category and key
+  settings.forEach(setting => {
+    const category = setting.category;
+    const key = setting.key;
+    const value = setting.value;
+    
+    if (category === 'layout') {
+      if (key.startsWith('heroSection.')) {
+        const heroKey = key.replace('heroSection.', '');
+        result.heroSection = {
+          ...result.heroSection,
+          [heroKey]: value
+        };
+      } else if (key.startsWith('aboutSection.')) {
+        const aboutKey = key.replace('aboutSection.', '');
+        result.aboutSection = {
+          ...result.aboutSection,
+          [aboutKey]: value
+        };
+      } else if (key.startsWith('featuredProducts.')) {
+        const featuredKey = key.replace('featuredProducts.', '');
+        result.featuredProducts = {
+          ...result.featuredProducts,
+          [featuredKey]: value
+        };
+      } else if (key.startsWith('categories.')) {
+        const categoriesKey = key.replace('categories.', '');
+        result.categories = {
+          ...result.categories,
+          [categoriesKey]: value
+        };
+      } else if (key.startsWith('contactInfo.')) {
+        const contactKey = key.replace('contactInfo.', '');
+        result.contactInfo = {
+          ...result.contactInfo,
+          [contactKey]: value
+        };
+      }
+    }
+  });
+  
+  return result;
+}
+
 // Layout ayarlarını API'den çekme
 export async function fetchLayoutSettings(): Promise<LayoutSettings> {
   try {
-    // Sunucu tarafında çalışıyorsa API'yi doğrudan çağırmak yerine veritabanını kullan
+    // Server tarafında çalışıyorsa doğrudan veritabanından çek
     if (typeof window === 'undefined') {
       try {
-        // Sunucu tarafında doğrudan veritabanına erişim
         const { prisma } = await import('@/lib/prisma');
         
-        // Veritabanından layout ayarlarını çekmeye çalış
-        const settings = await prisma.layoutSettings.findUnique({
+        // Layout ayarlarını çek
+        const layoutSettings = await prisma.layoutSettings.findUnique({
           where: { id: 'default' }
         });
-
-        // Eğer ayarlar varsa, JSON'dan parse et ve döndür
-        if (settings) {
+        
+        if (layoutSettings) {
           return {
-            heroSection: settings.heroSection as unknown as HeroSection,
-            featuredProducts: settings.featuredProducts as unknown as FeaturedProducts,
-            categories: settings.categories as unknown as Categories,
-            aboutSection: settings.aboutSection as unknown as AboutSection,
-            contactInfo: settings.contactInfo as unknown as ContactInfo
+            heroSection: layoutSettings.heroSection as unknown as HeroSection,
+            featuredProducts: layoutSettings.featuredProducts as unknown as FeaturedProducts,
+            categories: layoutSettings.categories as unknown as Categories,
+            aboutSection: layoutSettings.aboutSection as unknown as AboutSection,
+            contactInfo: layoutSettings.contactInfo as unknown as ContactInfo
           };
         }
-
-        // Eğer ayarlar yoksa, varsayılan ayarları veritabanına kaydet ve döndür
-        try {
-          await prisma.layoutSettings.create({
-            data: {
-              id: 'default',
-              heroSection: defaultLayoutSettings.heroSection as any,
-              featuredProducts: defaultLayoutSettings.featuredProducts as any,
-              categories: defaultLayoutSettings.categories as any,
-              aboutSection: defaultLayoutSettings.aboutSection as any,
-              contactInfo: defaultLayoutSettings.contactInfo as any
-            }
-          });
-          
-          console.log('Varsayılan layout ayarları veritabanına kaydedildi');
-        } catch (createError) {
-          console.error('Varsayılan ayarlar veritabanına kaydedilemedi:', createError);
-        }
-
+        
         return defaultLayoutSettings;
       } catch (dbError) {
         console.error('Veritabanı erişim hatası:', dbError);
@@ -151,12 +179,21 @@ export async function fetchLayoutSettings(): Promise<LayoutSettings> {
     }
     
     // Client tarafında çalışıyorsa API'yi çağır
-    // Önce localStorage'dan kontrol et
+    // Önce localStorage'dan kontrol et ve cache süresini kontrol et
     if (typeof window !== 'undefined') {
       try {
-        const cachedSettings = localStorage.getItem('layoutSettings');
-        if (cachedSettings) {
-          return JSON.parse(cachedSettings);
+        const cachedData = localStorage.getItem('layoutSettings');
+        const cacheTimestamp = localStorage.getItem('layoutSettingsTimestamp');
+        
+        if (cachedData && cacheTimestamp) {
+          const now = new Date().getTime();
+          const cacheTime = parseInt(cacheTimestamp, 10);
+          const cacheAge = now - cacheTime;
+          
+          // Cache 5 dakikadan yeni ise kullan (300000 ms = 5 dakika)
+          if (cacheAge < 300000) {
+            return JSON.parse(cachedData);
+          }
         }
       } catch (storageError) {
         console.error('localStorage erişim hatası:', storageError);
@@ -164,14 +201,8 @@ export async function fetchLayoutSettings(): Promise<LayoutSettings> {
       
       // API'den çek
       try {
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/layout?t=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
+        const response = await fetch(`/api/layout`, {
+          next: { revalidate: 300 } // 5 dakikada bir yeniden doğrula
         });
         
         if (!response.ok) {
@@ -183,6 +214,7 @@ export async function fetchLayoutSettings(): Promise<LayoutSettings> {
         // localStorage'a kaydet
         try {
           localStorage.setItem('layoutSettings', JSON.stringify(settings));
+          localStorage.setItem('layoutSettingsTimestamp', String(new Date().getTime()));
         } catch (storageError) {
           console.error('localStorage yazma hatası:', storageError);
         }
@@ -190,6 +222,16 @@ export async function fetchLayoutSettings(): Promise<LayoutSettings> {
         return settings;
       } catch (apiError) {
         console.error('API erişim hatası:', apiError);
+        
+        // Eğer cache varsa, süresi geçmiş olsa bile kullan
+        try {
+          const cachedData = localStorage.getItem('layoutSettings');
+          if (cachedData) {
+            console.log('API hatası nedeniyle süresi geçmiş cache kullanılıyor');
+            return JSON.parse(cachedData);
+          }
+        } catch (e) {}
+        
         return defaultLayoutSettings;
       }
     }

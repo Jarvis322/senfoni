@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { HeroSection } from '@/services/layoutService';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 
 // Client Component for the form
 function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
@@ -135,13 +136,16 @@ function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Arka Plan Görseli Önizleme</label>
           {formData.backgroundImage ? (
-            <div className="border border-gray-300 rounded-md overflow-hidden h-64 bg-gray-100">
-              <img 
+            <div className="border border-gray-300 rounded-md overflow-hidden h-64 bg-gray-100 relative">
+              <Image 
                 src={formData.backgroundImage} 
                 alt="Arka plan önizleme" 
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 800px"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://placehold.co/800x400?text=Görsel+Yüklenemedi';
+                  // @ts-ignore - Type safety for onError event
+                  e.target.src = 'https://placehold.co/800x400?text=Görsel+Yüklenemedi';
                 }}
               />
             </div>
