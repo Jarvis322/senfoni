@@ -83,7 +83,7 @@ export default async function ExchangeRatesPage() {
               TL para birimini kullanır ve tutarları kuruş cinsinden (1 TL = 100 kuruş) bekler.
             </p>
             <p>
-              Sistem, ürün fiyatlarını otomatik olarak TL'ye çevirecek ve PayTR için uygun formata
+              Sistem, ürün fiyatlarını otomatik olarak TL&apos;ye çevirecek ve PayTR için uygun formata
               dönüştürecektir. Farklı para birimlerinde gösterilen ürünler için ödeme anında güncel kurlar
               kullanılacaktır.
             </p>

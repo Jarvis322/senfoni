@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ContactInfo, SocialMedia } from '@/services/layoutService';
+import { ContactInfo } from '@/services/layoutService';
+import { updateLayoutSection } from '@/services/layoutService';
 import { useSearchParams } from 'next/navigation';
 
 // Client Component for the form
@@ -16,18 +17,17 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    if (name.includes('.')) {
-      // Sosyal medya alanları için
-      const [parent, child] = name.split('.');
+    // Handle nested socialMedia fields
+    if (name.startsWith('socialMedia.')) {
+      const socialField = name.split('.')[1];
       setFormData({
         ...formData,
         socialMedia: {
           ...formData.socialMedia,
-          [child]: value
+          [socialField]: value
         }
       });
     } else {
-      // Normal alanlar için
       setFormData({
         ...formData,
         [name]: value
@@ -41,21 +41,29 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
     setMessage({ type: '', text: '' });
 
     try {
-      // Import dynamically to avoid using server components in client components
-      const { updateLayoutSection } = await import('@/services/layoutService');
       const success = await updateLayoutSection('contactInfo', formData);
       
       if (success) {
-        setMessage({ type: 'success', text: 'İletişim bilgileri başarıyla güncellendi.' });
+        setMessage({ 
+          type: 'success', 
+          text: 'İletişim bilgileri başarıyla güncellendi!' 
+        });
+        // Redirect after successful update
         setTimeout(() => {
           router.push('/admin/layout');
-          router.refresh();
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: 'Güncelleme sırasında bir hata oluştu.' });
+        setMessage({ 
+          type: 'error', 
+          text: 'İletişim bilgileri güncellenirken bir hata oluştu.' 
+        });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Bir hata oluştu: ' + (error as Error).message });
+      console.error('Error updating contact info:', error);
+      setMessage({ 
+        type: 'error', 
+        text: 'İletişim bilgileri güncellenirken bir hata oluştu.' 
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -187,8 +195,8 @@ export default function EditContactInfoPage() {
         email: '',
         socialMedia: {
           facebook: '',
-          twitter: '',
-          instagram: ''
+          instagram: '',
+          twitter: ''
         }
       };
 

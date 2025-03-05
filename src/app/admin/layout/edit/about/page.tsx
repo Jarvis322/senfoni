@@ -123,18 +123,19 @@ function AboutSectionForm({ initialData }: { initialData: AboutSection }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Görsel Önizleme</label>
           {formData.image ? (
-            <div className="border border-gray-300 rounded-md overflow-hidden h-64 bg-gray-100 relative">
-              <Image 
-                src={formData.image} 
-                alt="Görsel önizleme" 
-                className="object-cover"
-                fill
-                sizes="(max-width: 768px) 100vw, 800px"
-                onError={(e) => {
-                  // @ts-ignore - Type safety for onError event
-                  e.target.src = 'https://placehold.co/800x400?text=Görsel+Yüklenemedi';
-                }}
-              />
+            <div className="border border-gray-300 rounded-md p-4">
+              <div className="aspect-w-16 aspect-h-9 mb-4">
+                <Image 
+                  src={formData.image} 
+                  alt="About section image preview" 
+                  width={800}
+                  height={400}
+                  className="object-cover rounded-md"
+                />
+              </div>
+              <p className="text-sm text-gray-500">
+                Image preview. You can change it later if you don&apos;t like it.
+              </p>
             </div>
           ) : (
             <div className="border border-gray-300 rounded-md h-64 bg-gray-100 flex items-center justify-center">

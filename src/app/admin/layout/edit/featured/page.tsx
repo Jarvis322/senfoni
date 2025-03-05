@@ -175,7 +175,7 @@ function FeaturedProductsForm({ initialData, allProducts }: { initialData: Featu
                             fill
                             sizes="40px"
                             onError={(e) => {
-                              // @ts-ignore - Type safety for onError event
+                              // @ts-expect-error Server Component
                               e.target.src = 'https://placehold.co/100?text=Ürün';
                             }}
                           />

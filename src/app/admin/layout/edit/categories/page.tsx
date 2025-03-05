@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Categories, Category } from '@/services/layoutService';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 
 // Client Component for the form
 function CategoriesForm({ initialData }: { initialData: Categories }) {
@@ -274,15 +275,16 @@ function CategoriesForm({ initialData }: { initialData: Categories }) {
                 ) : (
                   // Görüntüleme modu
                   <>
-                    <div className="aspect-w-1 aspect-h-1 mb-3 bg-gray-100 rounded-md overflow-hidden">
-                      <img 
-                        src={category.image} 
-                        alt={category.name} 
-                        className="object-cover w-full h-full"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://placehold.co/200?text=Kategori';
-                        }}
-                      />
+                    <div className="flex items-center space-x-3">
+                      <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                        <Image
+                          src={category.image || 'https://placehold.co/100?text=Kategori'}
+                          alt={category.name}
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     </div>
                     <h4 className="text-sm font-medium text-gray-900">{category.name}</h4>
                     <div className="flex space-x-2 mt-2">
