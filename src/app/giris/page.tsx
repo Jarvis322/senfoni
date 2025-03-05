@@ -1,3 +1,6 @@
+'use client';
+
+import { Suspense } from 'react';
 import LoginClient from '@/components/LoginClient';
 
 export const metadata = {
@@ -6,5 +9,9 @@ export const metadata = {
 };
 
 export default function LoginPage() {
-  return <LoginClient />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Yükleniyor...</div>}>
+      <LoginClient />
+    </Suspense>
+  );
 } 
