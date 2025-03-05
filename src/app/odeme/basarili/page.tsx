@@ -46,7 +46,7 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Yükleniyor...</div>}>
+    <Suspense fallback={<div>Loading payment information...</div>}>
       <PaymentSuccessContent />
     </Suspense>
   );
