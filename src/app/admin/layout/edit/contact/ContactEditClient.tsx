@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ContactInfo, updateLayoutSection } from '@/services/layoutService';
-import { useSearchParams } from 'next/navigation';
+import { ContactInfo } from '@/services/layoutService';
 
 // Client Component for the form
 function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
@@ -15,7 +14,7 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     // Handle nested socialMedia fields
     if (name.startsWith('socialMedia.')) {
       const socialField = name.split('.')[1];
@@ -40,28 +39,30 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
     setMessage({ type: '', text: '' });
 
     try {
+      // Import dynamically to avoid using server components in client components
+      const { updateLayoutSection } = await import('@/services/layoutService');
       const success = await updateLayoutSection('contactInfo', formData);
-      
+
       if (success) {
-        setMessage({ 
-          type: 'success', 
-          text: 'İletişim bilgileri başarıyla güncellendi!' 
+        setMessage({
+          type: 'success',
+          text: 'İletişim bilgileri başarıyla güncellendi!'
         });
         // Redirect after successful update
         setTimeout(() => {
           router.push('/admin/layout');
         }, 1500);
       } else {
-        setMessage({ 
-          type: 'error', 
-          text: 'İletişim bilgileri güncellenirken bir hata oluştu.' 
+        setMessage({
+          type: 'error',
+          text: 'İletişim bilgileri güncellenirken bir hata oluştu.'
         });
       }
     } catch (error) {
       console.error('Error updating contact info:', error);
-      setMessage({ 
-        type: 'error', 
-        text: 'İletişim bilgileri güncellenirken bir hata oluştu.' 
+      setMessage({
+        type: 'error',
+        text: 'İletişim bilgileri güncellenirken bir hata oluştu.'
       });
     } finally {
       setIsSubmitting(false);
@@ -79,7 +80,7 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <h3 className="font-medium text-gray-900">Temel İletişim Bilgileri</h3>
-          
+
           <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-700">Adres</label>
             <textarea
@@ -122,7 +123,7 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
 
         <div className="space-y-4">
           <h3 className="font-medium text-gray-900">Sosyal Medya Hesapları</h3>
-          
+
           <div>
             <label htmlFor="socialMedia.facebook" className="block text-sm font-medium text-gray-700">Facebook</label>
             <input
@@ -162,8 +163,8 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
       </div>
 
       <div className="flex justify-end space-x-3">
-        <Link 
-          href="/admin/layout" 
+        <Link
+          href="/admin/layout"
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           İptal
@@ -183,11 +184,11 @@ function ContactInfoForm({ initialData }: { initialData: ContactInfo }) {
 // Main client component
 export default function ContactEditClient() {
   const searchParams = useSearchParams();
-  
+
   // Parse the initial data if it exists
   const initialDataParam = searchParams.get('initialData');
-  const initialData: ContactInfo = initialDataParam 
-    ? JSON.parse(initialDataParam) 
+  const initialData: ContactInfo = initialDataParam
+    ? JSON.parse(initialDataParam)
     : {
         address: '',
         phone: '',
@@ -223,13 +224,13 @@ export default function ContactEditClient() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">İletişim Bilgileri Düzenleme</h1>
+            <h1 className="text-2xl font-bold text-gray-900">İletişim Bilgilerini Düzenle</h1>
             <Link href="/admin/layout" className="text-blue-600 hover:text-blue-800">
               Geri Dön
             </Link>
           </div>
           <p className="mt-1 text-sm text-gray-600">
-            Site genelinde gösterilen iletişim bilgilerini buradan düzenleyebilirsiniz.
+            Site genelinde görüntülenecek iletişim bilgilerini buradan düzenleyebilirsiniz.
           </p>
         </div>
 
