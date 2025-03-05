@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { FeaturedProducts } from '@/services/layoutService';
 import { Product } from '@/services/productService';
 import FeaturedEditClient from './FeaturedEditClient';
@@ -17,9 +18,11 @@ export default async function EditFeaturedProductsPage() {
   const allProducts: Product[] = await fetchProductsFromDatabase();
 
   return (
-    <FeaturedEditClient 
-      initialData={initialData} 
-      allProducts={allProducts} 
-    />
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeaturedEditClient 
+        initialData={initialData} 
+        allProducts={allProducts} 
+      />
+    </Suspense>
   );
 } 
