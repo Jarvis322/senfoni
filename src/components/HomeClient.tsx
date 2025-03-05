@@ -186,7 +186,7 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
               <div className="flex items-center space-x-6">
                 <span className="text-gray-200 hover:text-white transition-colors flex items-center">
                   <FaPhone className="mr-2 text-red-500" />
-                  {contactInfo.phone}
+                  {contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}
                 </span>
                 <span className="text-gray-200 hover:text-white transition-colors flex items-center">
                   <FaEnvelope className="mr-2 text-red-500" />
@@ -328,7 +328,7 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
                     <div className="space-y-2 px-4 pb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <FaPhone className="mr-3 text-red-500" />
-                        {contactInfo.phone}
+                        {contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <FaEnvelope className="mr-3 text-red-500" />
@@ -711,7 +711,7 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
               <ul className="space-y-3">
                 <li className="text-gray-400 flex items-start">
                   <FaPhone className="mr-3 mt-1" /> 
-                  <span>{contactInfo.phone}</span>
+                  <span>{contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}</span>
                 </li>
                 <li className="text-gray-400 flex items-start">
                   <FaEnvelope className="mr-3 mt-1" /> 
@@ -751,6 +751,15 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
           </div>
         </div>
       </footer>
+
+      <div className="fixed bottom-4 left-4 z-50">
+        <a href="http://wa.me/+905543028098" target="_blank" rel="noopener noreferrer">
+          <div className="bg-green-500 text-white p-3 rounded-full shadow-lg flex items-center space-x-2">
+            <FaPhone className="text-white" />
+            <span>WhatsApp</span>
+          </div>
+        </a>
+      </div>
     </div>
   );
 }
@@ -792,7 +801,7 @@ function ProductCard({ product }: { product: Product }) {
           <h3 className="text-lg font-medium text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
             {product.name}
           </h3>
-          <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
+          <p className="mt-1 text-sm text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: product.description }} />
           <div className="mt-2 flex items-center justify-between">
             <ProductPrice 
               price={product.price}

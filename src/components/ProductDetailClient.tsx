@@ -46,7 +46,7 @@ export default function ProductDetailClient({ product, similarProducts, layoutSe
             <div className="flex items-center space-x-4">
               <span className="text-gray-600 flex items-center">
                 <FaShoppingCart className="mr-2" />
-                {layoutSettings.contactInfo.phone}
+                {layoutSettings.contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}
               </span>
               <span className="text-gray-600 flex items-center">
                 <FaShoppingCart className="mr-2" />

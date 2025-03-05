@@ -154,7 +154,7 @@ export default function AccountClient({ layoutSettings }: AccountClientProps) {
                 </p>
                 <p className="flex items-center text-gray-400 mb-2">
                   <FaPhone className="mr-2" />
-                  <span>{layoutSettings.contactInfo.phone}</span>
+                  <span>{layoutSettings.contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}</span>
                 </p>
                 <p className="flex items-center text-gray-400">
                   <FaEnvelope className="mr-2" />
@@ -501,7 +501,7 @@ export default function AccountClient({ layoutSettings }: AccountClientProps) {
               </p>
               <p className="flex items-center text-gray-400 mb-2">
                 <FaPhone className="mr-2" />
-                <span>{layoutSettings.contactInfo.phone}</span>
+                <span>{layoutSettings.contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}</span>
               </p>
               <p className="flex items-center text-gray-400">
                 <FaEnvelope className="mr-2" />

@@ -279,7 +279,7 @@ const HakkimizdaClient: React.FC<HakkimizdaClientProps> = ({
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Telefon</h3>
             <p className="text-gray-600">
-              {layoutSettings.contactInfo.phone}
+              {layoutSettings.contactInfo.phone.replace(/\+90\s\d{3}\s\d{3}\s\d{2}\s\d{2}/, '+90 554 302 80 98')}
             </p>
           </div>
         </div>
