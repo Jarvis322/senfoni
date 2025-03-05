@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import PaymentSuccessClient from '@/components/PaymentSuccessClient';
 import { fetchLayoutSettings } from '@/services/layoutService';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const paymentMethod = searchParams.get('method');
   const orderIdFromUrl = searchParams.get('orderId');
@@ -41,5 +41,13 @@ export default function PaymentSuccessPage() {
       orderIdFromUrl={orderIdFromUrl}
       layoutSettings={layoutSettings}
     />
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Yükleniyor...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 } 
