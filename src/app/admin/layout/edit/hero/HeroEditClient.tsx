@@ -6,10 +6,21 @@ import Link from 'next/link';
 import { HeroSection } from '@/services/layoutService';
 import Image from 'next/image';
 
+// Extended interface for client-side use
+interface HeroSectionWithFiles extends HeroSection {
+  imageFile?: File;
+  imagePreview?: string;
+  image?: string;
+}
+
 // Client Component for the form
 function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
   const router = useRouter();
-  const [formData, setFormData] = useState<HeroSection>(initialData);
+  const [formData, setFormData] = useState<HeroSectionWithFiles>({
+    ...initialData,
+    // Map backgroundImage to image for consistency
+    image: initialData.backgroundImage
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -55,7 +66,7 @@ function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
       formDataToSend.append('title', formData.title);
       formDataToSend.append('subtitle', formData.subtitle);
       formDataToSend.append('buttonText', formData.buttonText);
-      formDataToSend.append('buttonLink', formData.buttonLink);
+      formDataToSend.append('backgroundImage', formData.backgroundImage || '');
       formDataToSend.append('enabled', String(formData.enabled));
       
       // Add the image file if it exists
@@ -64,8 +75,14 @@ function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
       }
 
       // Import dynamically to avoid using server components in client components
-      const { updateHeroSection } = await import('@/services/layoutService');
-      const success = await updateHeroSection(formDataToSend);
+      const { updateLayoutSection } = await import('@/services/layoutService');
+      const success = await updateLayoutSection('heroSection', {
+        title: formData.title,
+        subtitle: formData.subtitle,
+        buttonText: formData.buttonText,
+        backgroundImage: formData.backgroundImage || (formData.image || ''),
+        enabled: formData.enabled
+      });
       
       if (success) {
         setMessage({ type: 'success', text: 'Hero bölümü başarıyla güncellendi!' });
@@ -134,12 +151,12 @@ function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
           </div>
 
           <div>
-            <label htmlFor="buttonLink" className="block text-sm font-medium text-gray-700">Buton Bağlantısı</label>
+            <label htmlFor="backgroundImage" className="block text-sm font-medium text-gray-700">Arka Plan Görseli URL</label>
             <input
               type="text"
-              id="buttonLink"
-              name="buttonLink"
-              value={formData.buttonLink}
+              id="backgroundImage"
+              name="backgroundImage"
+              value={formData.backgroundImage}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               required
@@ -166,9 +183,9 @@ function HeroSectionForm({ initialData }: { initialData: HeroSection }) {
             <label className="block text-sm font-medium text-gray-700">Hero Görseli</label>
             <div className="mt-1 flex items-center">
               <div className="relative w-full h-48 overflow-hidden rounded-md border border-gray-300">
-                {(formData.imagePreview || formData.image) ? (
+                {(formData.imagePreview || formData.backgroundImage) ? (
                   <Image
-                    src={formData.imagePreview || formData.image || ''}
+                    src={formData.imagePreview || formData.backgroundImage || ''}
                     alt="Hero görseli"
                     fill
                     className="object-cover"
@@ -232,8 +249,7 @@ export default function HeroEditClient() {
         title: '',
         subtitle: '',
         buttonText: '',
-        buttonLink: '',
-        image: '',
+        backgroundImage: '',
         enabled: false
       };
 
