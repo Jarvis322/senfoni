@@ -6,7 +6,13 @@ import { Event, getEventById, updateEvent } from "@/services/eventService";
 import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaMoneyBillWave, FaTicketAlt, FaStar } from "react-icons/fa";
 import Image from "next/image";
 
-export default function EventEditPage({ params }: { params: { id: string } }) {
+interface EventEditPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function EventEditPage({ params }: EventEditPageProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,8 +24,7 @@ export default function EventEditPage({ params }: { params: { id: string } }) {
     async function loadEvent() {
       try {
         setLoading(true);
-        const resolvedParams = await params;
-        const eventData = await getEventById(resolvedParams.id);
+        const eventData = await getEventById(params.id);
         
         if (eventData) {
           setEvent(eventData);
@@ -63,8 +68,7 @@ export default function EventEditPage({ params }: { params: { id: string } }) {
     setSuccess(false);
 
     try {
-      const resolvedParams = await params;
-      await updateEvent(resolvedParams.id, formData);
+      await updateEvent(params.id, formData);
       setSuccess(true);
       // Başarılı mesajını 3 saniye sonra kaldır
       setTimeout(() => setSuccess(false), 3000);

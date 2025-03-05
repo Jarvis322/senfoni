@@ -7,7 +7,13 @@ import { getEventById, deleteEvent, Event } from '@/services/eventService';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
-export default function DeleteEventPage({ params }: { params: { id: string } }) {
+interface DeleteEventPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function DeleteEventPage({ params }: DeleteEventPageProps) {
   const router = useRouter();
   const { id } = params;
   
