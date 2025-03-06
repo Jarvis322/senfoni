@@ -12,6 +12,7 @@ import { Product } from "@/services/productService";
 import ProductPrice from "@/components/ProductPrice";
 import AddToCartButton from '@/components/AddToCartButton';
 import { Currency } from '@/types/currency';
+import { motion } from "framer-motion";
 
 interface KategoriDetayClientProps {
   layoutSettings: LayoutSettings;
@@ -20,10 +21,12 @@ interface KategoriDetayClientProps {
 }
 
 export default function KategoriDetayClient({ layoutSettings, category, products }: KategoriDetayClientProps) {
-  const [sortBy, setSortBy] = useState<string>('featured');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<string>('featured');
   
   // Ürünlerin fiyat aralığını belirle
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function KategoriDetayClient({ layoutSettings, category, products
       const prices = products.map(p => p.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      setPriceRange([0, Math.ceil(maxPrice * 1.1)]); // Maksimum fiyatı biraz daha yüksek tutuyoruz
+      setSelectedPriceRange([0, Math.ceil(maxPrice * 1.1)]); // Maksimum fiyatı biraz daha yüksek tutuyoruz
       console.log(`Fiyat aralığı otomatik ayarlandı: ${minPrice} - ${maxPrice}`);
     }
   }, [products]);
@@ -52,7 +55,7 @@ export default function KategoriDetayClient({ layoutSettings, category, products
     console.log(`Sıralanacak ürün sayısı: ${products.length}`);
     
     return [...products].sort((a, b) => {
-      switch (sortBy) {
+      switch (sortOption) {
         case 'price-asc':
           return a.price - b.price;
         case 'price-desc':
@@ -65,13 +68,13 @@ export default function KategoriDetayClient({ layoutSettings, category, products
           return 0;
       }
     });
-  }, [products, sortBy]);
+  }, [products, sortOption]);
   
   // Ürünleri filtrele
   const filteredProducts = useMemo(() => {
     console.log(`Filtrelenecek ürün sayısı: ${sortedProducts.length}`);
     console.log(`Seçili markalar: ${selectedBrands.join(', ') || 'Yok'}`);
-    console.log(`Fiyat aralığı: ${priceRange[0]} - ${priceRange[1]}`);
+    console.log(`Fiyat aralığı: ${selectedPriceRange[0]} - ${selectedPriceRange[1]}`);
     
     // Filtreleme işlemi öncesi ürünleri kontrol et
     sortedProducts.forEach((product, index) => {
@@ -82,7 +85,7 @@ export default function KategoriDetayClient({ layoutSettings, category, products
     
     const filtered = sortedProducts.filter(product => {
       // Fiyat aralığı kontrolü
-      const priceCheck = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const priceCheck = product.price >= selectedPriceRange[0] && product.price <= selectedPriceRange[1];
       
       // Marka kontrolü
       const brandCheck = selectedBrands.length === 0 || 
@@ -102,7 +105,7 @@ export default function KategoriDetayClient({ layoutSettings, category, products
     
     console.log(`Filtreleme sonrası ürün sayısı: ${filtered.length}`);
     return filtered;
-  }, [sortedProducts, priceRange, selectedBrands]);
+  }, [sortedProducts, selectedPriceRange, selectedBrands]);
   
   console.log(`Kategori: ${category.name}, Toplam ürün: ${products.length}, Filtrelenmiş ürün: ${filteredProducts.length}`);
   
@@ -114,84 +117,138 @@ export default function KategoriDetayClient({ layoutSettings, category, products
           {/* Üst Bar */}
           <div className="flex justify-between items-center py-2 text-sm border-b border-gray-100">
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600 flex items-center">
+              <span className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
                 <FaPhone className="mr-2" />
                 {layoutSettings.contactInfo.phone}
               </span>
-              <span className="text-gray-600 flex items-center">
+              <span className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
                 <FaEnvelope className="mr-2" />
                 {layoutSettings.contactInfo.email}
               </span>
             </div>
             <div className="flex items-center space-x-4">
               <HeaderCurrencySelector />
-              <Link href="/hesabim" className="text-gray-600 hover:text-red-600 transition-colors">
-                <FaUser className="inline mr-1" /> Hesabım
-              </Link>
-              <Link href="/admin" className="text-gray-600 hover:text-red-600 transition-colors">
-                <FaCog className="inline mr-1" /> Yönetim
-              </Link>
-              <Link href="/debug" className="text-gray-600 hover:text-red-600 transition-colors">
-                <FaBug className="inline mr-1" /> Debug
+              <Link href="/hesabim" className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
+                <FaUser className="mr-1" /> Hesabım
               </Link>
             </div>
           </div>
           
           {/* Ana Menü */}
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <Image 
-                  src="/logo.png" 
-                  alt="Senfoni Müzik" 
-                  width={150} 
-                  height={50} 
-                  className="h-10 w-auto"
-                />
-              </Link>
-            </div>
+            <Link href="/" className="flex items-center">
+              <Image 
+                src="/logo.png" 
+                alt="Senfoni Müzik" 
+                width={150} 
+                height={50} 
+                className="h-10 w-auto"
+              />
+            </Link>
             
             {/* Arama Kutusu */}
-            <div className="flex-1 max-w-xl mx-8">
+            <div className="hidden md:block flex-1 max-w-md mx-8">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Ürün, kategori veya marka ara..."
-                  className="w-full py-2 px-4 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full py-2 px-4 pr-10 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 transition-all bg-gray-100 border border-gray-200 text-gray-800"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <button className="absolute right-0 top-0 h-full px-4 text-gray-500 hover:text-red-600">
+                <button className="absolute right-0 top-0 h-full px-4 text-gray-500 hover:text-red-500">
                   <FaSearch />
                 </button>
               </div>
             </div>
             
-            {/* Sepet ve Favoriler */}
-            <div className="flex items-center space-x-6">
-              <Link href="/favoriler" className="text-gray-700 hover:text-red-600 relative">
-                <FaShoppingCart className="text-2xl" />
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+            {/* Masaüstü Menü */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-700 hover:text-red-500 transition-colors font-medium">
+                Ana Sayfa
+              </Link>
+              <Link href="/urunler" className="text-gray-700 hover:text-red-500 transition-colors font-medium">
+                Ürünler
+              </Link>
+              <Link href="/konserler" className="text-gray-700 hover:text-red-500 transition-colors font-medium">
+                Etkinlikler
               </Link>
               <CartButton />
             </div>
+            
+            {/* Mobil Menü Butonu */}
+            <div className="md:hidden flex items-center">
+              <button 
+                className="text-gray-700 hover:text-red-500 transition-colors p-2"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
           
-          {/* Kategoriler Menüsü */}
-          <nav className="bg-gray-100 py-3 px-4 rounded-lg mb-4">
-            <ul className="flex space-x-6 overflow-x-auto">
-              {layoutSettings.categories.items.map((category) => (
-                <li key={category.id}>
-                  <Link href={`/kategori/${category.id}`} className="text-gray-700 hover:text-red-600 whitespace-nowrap font-medium">
-                    {category.name}
+          {/* Mobil Menü */}
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white mt-4 rounded-lg shadow-lg overflow-hidden"
+            >
+              <div className="py-2 px-4">
+                <div className="relative mb-4">
+                  <input
+                    type="text"
+                    placeholder="Ürün, kategori veya marka ara..."
+                    className="w-full py-2 px-4 pr-10 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <button className="absolute right-0 top-0 h-full px-4 text-gray-500 hover:text-red-500">
+                    <FaSearch />
+                  </button>
+                </div>
+                
+                <nav className="space-y-3">
+                  <Link href="/" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Ana Sayfa
                   </Link>
-                </li>
-              ))}
-              <li>
-                <Link href="/kategoriler" className="text-gray-700 hover:text-red-600 whitespace-nowrap font-medium">
-                  Tüm Kategoriler
-                </Link>
-              </li>
-            </ul>
-          </nav>
+                  <Link href="/urunler" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Ürünler
+                  </Link>
+                  <Link href="/konserler" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Etkinlikler
+                  </Link>
+                  <Link href="/hesabim" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Hesabım
+                  </Link>
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="flex items-center justify-between py-2 px-4 text-gray-500">
+                      <span>İletişim</span>
+                    </div>
+                    <div className="space-y-2 px-4 pb-4">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaPhone className="mr-3 text-red-500" />
+                        {layoutSettings.contactInfo.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaEnvelope className="mr-3 text-red-500" />
+                        {layoutSettings.contactInfo.email}
+                      </div>
+                    </div>
+                  </div>
+                </nav>
+              </div>
+            </motion.div>
+          )}
         </div>
       </header>
 
@@ -237,8 +294,8 @@ export default function KategoriDetayClient({ layoutSettings, category, products
               <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
                 <FilterSidebar 
                   brands={brands}
-                  priceRange={priceRange}
-                  setPriceRange={setPriceRange}
+                  priceRange={selectedPriceRange}
+                  setPriceRange={setSelectedPriceRange}
                   selectedBrands={selectedBrands}
                   setSelectedBrands={setSelectedBrands}
                 />
@@ -251,8 +308,8 @@ export default function KategoriDetayClient({ layoutSettings, category, products
             <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-4">
               <FilterSidebar 
                 brands={brands}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
+                priceRange={selectedPriceRange}
+                setPriceRange={setSelectedPriceRange}
                 selectedBrands={selectedBrands}
                 setSelectedBrands={setSelectedBrands}
               />
@@ -292,7 +349,7 @@ export default function KategoriDetayClient({ layoutSettings, category, products
                 <p className="text-gray-600 mb-4">Seçtiğiniz filtrelere uygun ürün bulunamadı. Lütfen filtrelerinizi değiştirin.</p>
                 <button 
                   onClick={() => {
-                    setPriceRange([0, 50000]);
+                    setSelectedPriceRange([0, 50000]);
                     setSelectedBrands([]);
                   }}
                   className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"

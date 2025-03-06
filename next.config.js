@@ -14,9 +14,10 @@ const nextConfig = {
   },
   images: {
     domains: [
-      'static.ticimax.cloud',
       'images.unsplash.com',
-      'placehold.co'
+      'static.ticimax.cloud',
+      'placehold.co',
+      'www.maskemuzik.com'
     ],
   },
 }

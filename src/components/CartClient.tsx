@@ -180,20 +180,20 @@ export default function CartClient({ layoutSettings }: CartClientProps) {
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Sipariş Özeti</h2>
                   
                   <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Ara Toplam</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Ara Toplam:</span>
                       <span className="text-gray-900 font-medium">{formatCurrency(totalPrice, 'TRY')}</span>
                     </div>
                     
                     {couponApplied && (
-                      <div className="flex justify-between text-green-600">
-                        <span>İndirim (SENFONI10)</span>
+                      <div className="flex justify-between py-2 border-b border-gray-200">
+                        <span className="text-gray-600">İndirim:</span>
                         <span>-{formatCurrency(discountAmount, 'TRY')}</span>
                       </div>
                     )}
                     
-                    <div className="pt-4 border-t border-gray-200 flex justify-between font-semibold">
-                      <span className="text-gray-900">Toplam</span>
+                    <div className="flex justify-between py-2 font-bold">
+                      <span className="text-gray-800">Toplam:</span>
                       <span className="text-red-600 text-xl">{formatCurrency(finalTotal, 'TRY')}</span>
                     </div>
                   </div>

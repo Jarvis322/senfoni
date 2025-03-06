@@ -1,4 +1,5 @@
 import { Currency } from '@/types/currency';
+import { formatCurrency as formatCurrencyUtil } from '@/lib/utils';
 
 // Desteklenen para birimleri
 export const SUPPORTED_CURRENCIES: Currency[] = ['TRY', 'USD', 'EUR'];
@@ -36,27 +37,7 @@ export type ExchangeRateInput = {
  * @returns Formatlanmış para birimi
  */
 export const formatCurrency = (amount: number, currency: Currency): string => {
-  // TL değerini TRY'ye dönüştür
-  let validCurrency = currency;
-  if (currency === 'TL' as any) {
-    console.warn('Geçersiz para birimi kodu: TL, TRY kullanılıyor');
-    validCurrency = 'TRY';
-  }
-  
-  try {
-    const formatter = new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: validCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    
-    return formatter.format(amount);
-  } catch (error) {
-    console.error(`Para birimi formatlanırken hata oluştu: ${error}`);
-    // Hata durumunda basit bir formatlama yap
-    return `${amount.toFixed(2)} ${validCurrency}`;
-  }
+  return formatCurrencyUtil(amount, currency);
 };
 
 /**

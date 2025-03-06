@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FaShoppingCart, FaPhone, FaEnvelope, FaUser, FaCog, FaBug, FaCalendarAlt, FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { FaShoppingCart, FaPhone, FaEnvelope, FaUser, FaCog, FaBug, FaCalendarAlt, FaMapMarkerAlt, FaClock, FaTicketAlt, FaSearch } from "react-icons/fa";
 import HeaderCurrencySelector from "./HeaderCurrencySelector";
 import CartButton from "./CartButton";
+import { useState } from 'react';
 
 type Event = {
   id: string;
@@ -42,6 +43,9 @@ export default function KonserlerClient({
   featuredEvent: Event | null,
   layoutSettings: LayoutSettings 
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -64,12 +68,6 @@ export default function KonserlerClient({
               <Link href="/hesabim" className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
                 <FaUser className="mr-1" /> Hesabım
               </Link>
-              <Link href="/admin" className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
-                <FaCog className="mr-1" /> Yönetim
-              </Link>
-              <Link href="/debug" className="text-gray-600 hover:text-red-600 transition-colors flex items-center">
-                <FaBug className="mr-1" /> Debug
-              </Link>
             </div>
           </div>
           
@@ -91,34 +89,113 @@ export default function KonserlerClient({
               </Link>
             </motion.div>
             
+            {/* Arama Kutusu */}
+            <div className="hidden md:block flex-1 max-w-md mx-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Etkinlik ara..."
+                  className="w-full py-2 px-4 pr-10 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 transition-all bg-gray-100 border border-gray-200 text-gray-800"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className="absolute right-0 top-0 h-full px-4 text-gray-500 hover:text-red-500">
+                  <FaSearch />
+                </button>
+              </div>
+            </div>
+            
+            {/* Masaüstü Menü */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+              <Link href="/" className="text-gray-700 hover:text-red-500 transition-colors font-medium">
                 Ana Sayfa
               </Link>
-              <Link href="/kategoriler" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
-                Kategoriler
+              <Link href="/urunler" className="text-gray-700 hover:text-red-500 transition-colors font-medium">
+                Ürünler
               </Link>
-              <Link href="/yeni-urunler" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
-                Yeni Ürünler
-              </Link>
-              <Link href="/konserler" className="text-red-600 font-medium">
-                Konserler & Etkinlikler
+              <Link href="/konserler" className="text-red-500 transition-colors font-medium">
+                Etkinlikler
               </Link>
               <CartButton />
             </div>
             
+            {/* Mobil Menü Butonu */}
             <div className="md:hidden flex items-center">
-              <button className="text-gray-700 hover:text-red-600 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+              <button 
+                className="text-gray-700 hover:text-red-500 transition-colors p-2"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
+          
+          {/* Mobil Menü */}
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white mt-4 rounded-lg shadow-lg overflow-hidden"
+            >
+              <div className="py-2 px-4">
+                <div className="relative mb-4">
+                  <input
+                    type="text"
+                    placeholder="Etkinlik ara..."
+                    className="w-full py-2 px-4 pr-10 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <button className="absolute right-0 top-0 h-full px-4 text-gray-500 hover:text-red-500">
+                    <FaSearch />
+                  </button>
+                </div>
+                
+                <nav className="space-y-3">
+                  <Link href="/" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Ana Sayfa
+                  </Link>
+                  <Link href="/urunler" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Ürünler
+                  </Link>
+                  <Link href="/konserler" className="block py-2 px-4 text-red-500 bg-red-50 rounded-lg">
+                    Etkinlikler
+                  </Link>
+                  <Link href="/hesabim" className="block py-2 px-4 text-gray-700 hover:bg-red-50 hover:text-red-500 rounded-lg">
+                    Hesabım
+                  </Link>
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="flex items-center justify-between py-2 px-4 text-gray-500">
+                      <span>İletişim</span>
+                    </div>
+                    <div className="space-y-2 px-4 pb-4">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaPhone className="mr-3 text-red-500" />
+                        {layoutSettings.contactInfo.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaEnvelope className="mr-3 text-red-500" />
+                        {layoutSettings.contactInfo.email}
+                      </div>
+                    </div>
+                  </div>
+                </nav>
+              </div>
+            </motion.div>
+          )}
         </div>
       </header>
 
-      <main>
+      <main className="container mx-auto px-4 py-8">
         {/* Öne Çıkan Etkinlik */}
         {featuredEvent && (
           <div className="relative bg-gray-900 text-white">

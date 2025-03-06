@@ -283,7 +283,7 @@ export async function syncProductsWithDatabase(): Promise<{ success: boolean; co
         
         clearTimeout(timeoutId);
     
-        if (!response.ok) {
+    if (!response.ok) {
           console.log(`${url} kaynağından XML çekilemedi: ${response.status} ${response.statusText}`);
           continue; // Sonraki URL'yi dene
         }
@@ -625,7 +625,7 @@ function processProductNode(productNode: any): any {
     } else if (option.ParaBirimiKodu) {
       // TRY, USD, EUR gibi kodları Currency tipine dönüştür
       result.currency = validateCurrency(option.ParaBirimiKodu);
-    } else {
+      } else {
       // Varsayılan para birimi
       result.currency = 'TRY';
     }
@@ -653,11 +653,11 @@ function processProductNode(productNode: any): any {
       result.currency = option.ParaBirimi === 'TL' ? 'TRY' : validateCurrency(option.ParaBirimi);
     } else if (option.ParaBirimiKodu) {
       result.currency = validateCurrency(option.ParaBirimiKodu);
-    } else {
+        } else {
       // Varsayılan para birimi
       result.currency = 'TRY';
-    }
-  } else {
+        }
+      } else {
     // Seçenek yoksa varsayılan değerler
     result.price = 0;
     result.stock = 0;
@@ -714,30 +714,35 @@ export async function fetchProducts(): Promise<Product[]> {
     if (typeof window === 'undefined') {
       try {
         const { prisma } = await import('@/lib/prisma');
-        
+
         const products = await prisma.product.findMany();
         console.log(`Veritabanından ${products.length} ürün çekildi`);
-        
+
         // Veritabanından gelen verileri Product tipine dönüştür
-        return products.map(dbProduct => ({
-          id: dbProduct.id,
-          name: dbProduct.name,
-          description: dbProduct.description || "",
-          price: dbProduct.price,
-          discountedPrice: dbProduct.discountedPrice || undefined,
-          stock: dbProduct.stock,
-          brand: dbProduct.brand || "",
-          categories: dbProduct.categories as string[],
-          images: dbProduct.images as string[],
-          currency: validateCurrency(dbProduct.currency)
-        }));
+        if (products && products.length > 0) {
+          return products.map(dbProduct => ({
+            id: dbProduct.id,
+            name: dbProduct.name,
+            description: dbProduct.description || "",
+            price: dbProduct.price,
+            discountedPrice: dbProduct.discountedPrice || undefined,
+            stock: dbProduct.stock,
+            brand: dbProduct.brand || "",
+            categories: dbProduct.categories as string[],
+            images: dbProduct.images as string[],
+            currency: validateCurrency(dbProduct.currency)
+          }));
+        } else {
+          console.log("Veritabanında ürün bulunamadı, örnek ürünler kullanılıyor.");
+          return []; // Boş dizi döndür, örnek ürünleri kullanma
+        }
       } catch (dbError) {
         console.error("Veritabanından ürünler çekilirken hata oluştu:", dbError);
         console.log("Boş ürün listesi döndürülüyor...");
-        return [];
+        return []; // Hata durumunda boş dizi döndür, örnek ürünleri kullanma
       }
     }
-    
+
     // Client tarafında çalışıyorsa API'yi çağır
     const timestamp = new Date().getTime();
     const response = await fetch(`/api/admin/products?t=${timestamp}`, {
@@ -754,10 +759,15 @@ export async function fetchProducts(): Promise<Product[]> {
     }
 
     const products = await response.json();
-    return products;
+    if (products && products.length > 0) {
+      return products;
+    } else {
+      console.log("API'den ürün alınamadı, boş dizi döndürülüyor.");
+      return []; // Boş dizi döndür, örnek ürünleri kullanma
+    }
   } catch (error) {
     console.error("Ürünler çekilirken hata oluştu:", error);
-    return [];
+    return []; // Hata durumunda boş dizi döndür, örnek ürünleri kullanma
   }
 }
 
@@ -1004,7 +1014,7 @@ export async function deleteProduct(id: string, onSuccess?: () => void): Promise
     try {
       const products = await fetchProducts();
       const updatedProducts = products.filter(p => p.id !== id);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
     } catch (storageError) {
       console.error("LocalStorage güncellenirken hata oluştu:", storageError);
       // Bu hata kritik değil, devam edebiliriz

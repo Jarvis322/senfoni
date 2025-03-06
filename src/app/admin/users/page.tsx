@@ -1,83 +1,37 @@
 import { FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaUserPlus } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { prisma } from "@/lib/prisma";
+import FormattedDate from "@/components/FormattedDate";
 
-export default function UsersPage() {
-  // Örnek kullanıcı verileri
-  const users = [
-    {
-      id: "USR-001",
-      name: "Ahmet Yılmaz",
-      email: "ahmet.yilmaz@example.com",
-      role: "Admin",
-      status: "Aktif",
-      lastLogin: "2023-12-15T14:30:00",
-      avatar: "https://randomuser.me/api/portraits/men/1.jpg"
-    },
-    {
-      id: "USR-002",
-      name: "Ayşe Demir",
-      email: "ayse.demir@example.com",
-      role: "Müşteri",
-      status: "Aktif",
-      lastLogin: "2023-12-14T10:15:00",
-      avatar: "https://randomuser.me/api/portraits/women/2.jpg"
-    },
-    {
-      id: "USR-003",
-      name: "Mehmet Kaya",
-      email: "mehmet.kaya@example.com",
-      role: "Müşteri",
-      status: "Aktif",
-      lastLogin: "2023-12-13T16:45:00",
-      avatar: "https://randomuser.me/api/portraits/men/3.jpg"
-    },
-    {
-      id: "USR-004",
-      name: "Zeynep Çelik",
-      email: "zeynep.celik@example.com",
-      role: "Müşteri",
-      status: "Pasif",
-      lastLogin: "2023-12-10T09:20:00",
-      avatar: "https://randomuser.me/api/portraits/women/4.jpg"
-    },
-    {
-      id: "USR-005",
-      name: "Mustafa Şahin",
-      email: "mustafa.sahin@example.com",
-      role: "Editör",
-      status: "Aktif",
-      lastLogin: "2023-12-12T11:30:00",
-      avatar: "https://randomuser.me/api/portraits/men/5.jpg"
-    },
-    {
-      id: "USR-006",
-      name: "Elif Yıldız",
-      email: "elif.yildiz@example.com",
-      role: "Müşteri",
-      status: "Aktif",
-      lastLogin: "2023-12-11T13:45:00",
-      avatar: "https://randomuser.me/api/portraits/women/6.jpg"
-    },
-    {
-      id: "USR-007",
-      name: "Burak Öztürk",
-      email: "burak.ozturk@example.com",
-      role: "Müşteri",
-      status: "Pasif",
-      lastLogin: "2023-12-08T15:10:00",
-      avatar: "https://randomuser.me/api/portraits/men/7.jpg"
-    },
-    {
-      id: "USR-008",
-      name: "Selin Aydın",
-      email: "selin.aydin@example.com",
-      role: "Müşteri",
-      status: "Aktif",
-      lastLogin: "2023-12-09T17:25:00",
-      avatar: "https://randomuser.me/api/portraits/women/8.jpg"
-    }
-  ];
+// Veritabanından kullanıcıları çeken fonksiyon
+async function getUsers() {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    return users.map(user => ({
+      id: user.id,
+      name: user.name || 'İsimsiz Kullanıcı',
+      email: user.email,
+      role: user.role || 'USER',
+      status: user.role === 'ADMIN' ? 'Aktif' : 'Müşteri',
+      lastLogin: user.updatedAt || user.createdAt,
+      // Varsayılan avatar kullan
+      avatar: '/images/default-avatar.png'
+    }));
+  } catch (error) {
+    console.error("Kullanıcılar çekilirken hata oluştu:", error);
+    return [];
+  }
+}
+
+export default async function UsersPage() {
+  // Veritabanından kullanıcıları çek
+  const users = await getUsers();
 
   // Kullanıcı durumuna göre renk sınıfı belirleme
   const getStatusColorClass = (status: string) => {
@@ -124,8 +78,8 @@ export default function UsersPage() {
             <FaFilter className="mr-2 h-4 w-4" />
             Filtrele
           </button>
-          <Link 
-            href="/admin/users/new" 
+          <Link
+            href="/admin/users/new"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             <FaUserPlus className="mr-2 h-4 w-4" />
@@ -160,56 +114,64 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 relative">
-                        <Image
-                          className="h-10 w-10 rounded-full"
-                          src={user.avatar}
-                          alt={user.name}
-                          width={40}
-                          height={40}
-                        />
+              {users.length > 0 ? (
+                users.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 relative">
+                          <Image
+                            className="h-10 w-10 rounded-full"
+                            src={user.avatar}
+                            alt={user.name}
+                            width={40}
+                            height={40}
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500">{user.id}</div>
+                        </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.id}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColorClass(user.role)}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColorClass(user.status)}`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <FormattedDate date={user.lastLogin} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link href={`/admin/users/${user.id}`} className="text-indigo-600 hover:text-indigo-900">
+                          <FaEye className="h-5 w-5" />
+                        </Link>
+                        <Link href={`/admin/users/${user.id}/edit`} className="text-blue-600 hover:text-blue-900">
+                          <FaEdit className="h-5 w-5" />
+                        </Link>
+                        <button className="text-red-600 hover:text-red-900">
+                          <FaTrash className="h-5 w-5" />
+                        </button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColorClass(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColorClass(user.status)}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.lastLogin).toLocaleString('tr-TR')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link href={`/admin/users/${user.id}`} className="text-indigo-600 hover:text-indigo-900">
-                        <FaEye className="h-5 w-5" />
-                      </Link>
-                      <Link href={`/admin/users/${user.id}/edit`} className="text-blue-600 hover:text-blue-900">
-                        <FaEdit className="h-5 w-5" />
-                      </Link>
-                      <button className="text-red-600 hover:text-red-900">
-                        <FaTrash className="h-5 w-5" />
-                      </button>
-                    </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    Henüz kullanıcı bulunmamaktadır.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -226,7 +188,7 @@ export default function UsersPage() {
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700">
-                Toplam <span className="font-medium">8</span> kullanıcı
+                Toplam <span className="font-medium">{users.length}</span> kullanıcı
               </p>
             </div>
             <div>
@@ -239,9 +201,6 @@ export default function UsersPage() {
                 </button>
                 <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600 hover:bg-gray-50">
                   1
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  2
                 </button>
                 <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                   <span className="sr-only">Sonraki</span>

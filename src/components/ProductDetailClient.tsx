@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaHeart, FaShoppingCart, FaTruck, FaShieldAlt, FaUndo } from "react-icons/fa";
 import ProductPrice from "@/components/ProductPrice";
 import AddToCartButton from '@/components/AddToCartButton';
@@ -14,8 +14,14 @@ import { LayoutSettings } from "@/services/layoutService";
 // CDATA içeriğini işleyen yardımcı fonksiyon
 const processDescription = (desc: any): string => {
   if (!desc) return "";
-  if (typeof desc === 'string') return desc;
-  if (desc.__cdata) return desc.__cdata;
+  if (typeof desc === 'string') {
+    // Normalize style tags to lowercase
+    return desc.replace(/<STYLE>/g, '<style>').replace(/<\/STYLE>/g, '</style>');
+  }
+  if (desc.__cdata) {
+    // Normalize style tags to lowercase in CDATA
+    return desc.__cdata.replace(/<STYLE>/g, '<style>').replace(/<\/STYLE>/g, '</style>');
+  }
   if (typeof desc === 'object') return JSON.stringify(desc);
   return String(desc);
 };
@@ -29,12 +35,19 @@ interface ProductDetailClientProps {
 export default function ProductDetailClient({ product, similarProducts, layoutSettings }: ProductDetailClientProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [processedDescription, setProcessedDescription] = useState<string>('');
   
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity >= 1 && newQuantity <= (product.stock || 100)) {
       setQuantity(newQuantity);
     }
   };
+  
+  useEffect(() => {
+    if (product.description) {
+      setProcessedDescription(processDescription(product.description));
+    }
+  }, [product.description]);
   
   return (
     <div className="min-h-screen bg-white">
@@ -218,11 +231,11 @@ export default function ProductDetailClient({ product, similarProducts, layoutSe
                 </p>
               </div>
               
-              <div className="mb-6 pb-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold mb-3">Ürün Açıklaması</h2>
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-gray-900">Açıklama</h3>
                 <div 
-                  className="text-gray-700 leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-a:text-red-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg" 
-                  dangerouslySetInnerHTML={{ __html: processDescription(product.description) }} 
+                  className="mt-4 prose prose-sm text-gray-500"
+                  dangerouslySetInnerHTML={{ __html: processedDescription }}
                 />
               </div>
               
@@ -416,10 +429,10 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div className="p-4">
-          <h3 className="text-lg font-medium text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
-            {product.name}
-          </h3>
-          <div className="mt-1 text-sm text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: processDescription(product.description) }} />
+          <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
+          <div className="mt-1 text-sm text-gray-500 line-clamp-2">
+            {product.description ? product.description.replace(/<[^>]*>/g, '') : ''}
+          </div>
           <div className="mt-2 flex items-center justify-between">
             <ProductPrice 
               price={product.price}

@@ -1,24 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaSave, FaArrowLeft } from 'react-icons/fa';
 import { useNotification } from '@/components/NotificationProvider';
+import { useLayout } from '@/contexts/LayoutContext';
 
 export default function EditLayoutSettingsPage() {
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { settings, updateSettings, isLoading: isContextLoading } = useLayout();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    siteTitle: 'Senfoni Müzik - Müzik Aletleri ve Ekipmanları',
-    siteDescription: 'Kaliteli müzik aletleri ve ekipmanları',
-    siteLogo: '/logo.png',
-    siteFavicon: '/favicon.ico',
-    primaryColor: '#4f46e5',
-    secondaryColor: '#f59e0b',
-    footerText: '© 2025 Senfoni Müzik. Tüm hakları saklıdır.'
+    siteTitle: '',
+    siteDescription: '',
+    siteLogo: '',
+    siteFavicon: '',
+    primaryColor: '',
+    secondaryColor: '',
+    footerText: ''
   });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        siteTitle: settings.heroSection.title,
+        siteDescription: settings.heroSection.subtitle,
+        siteLogo: '/logo.png',
+        siteFavicon: '/favicon.ico',
+        primaryColor: '#4f46e5',
+        secondaryColor: '#f59e0b',
+        footerText: '© 2025 Senfoni Müzik. Tüm hakları saklıdır.'
+      });
+    }
+  }, [settings]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -33,17 +49,35 @@ export default function EditLayoutSettingsPage() {
     setIsSubmitting(true);
 
     try {
-      // API çağrısı simülasyonu
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Başarılı bildirim göster
-      showNotification("Sayfa ayarları başarıyla kaydedildi!", "success");
-      
-      // Yönlendirme
-      setTimeout(() => {
-        router.push('/admin/layout');
-        router.refresh();
-      }, 1000);
+      if (!settings) {
+        throw new Error('Mevcut ayarlar yüklenemedi');
+      }
+
+      const success = await updateSettings({
+        ...settings,
+        heroSection: {
+          ...settings.heroSection,
+          title: formData.siteTitle,
+          subtitle: formData.siteDescription
+        },
+        aboutSection: {
+          ...settings.aboutSection,
+          title: formData.siteTitle,
+          content: formData.siteDescription
+        }
+      });
+
+      if (success) {
+        showNotification("Sayfa ayarları başarıyla kaydedildi!", "success");
+        
+        // Yönlendirme
+        setTimeout(() => {
+          router.push('/admin/layout');
+          router.refresh();
+        }, 1000);
+      } else {
+        throw new Error("Ayarlar kaydedilemedi");
+      }
     } catch (error) {
       showNotification("Ayarlar kaydedilirken bir hata oluştu.", "error");
       console.error("Ayarlar kaydedilirken hata:", error);
@@ -51,6 +85,17 @@ export default function EditLayoutSettingsPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (isContextLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Ayarlar yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">

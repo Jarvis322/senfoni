@@ -46,113 +46,82 @@ const defaultLayoutSettings = {
 };
 
 // GET endpoint - layout ayarlarını getir
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Veritabanından layout ayarlarını çekmeye çalış
-    const settings = await prisma.layoutSettings.findUnique({
+    const layoutSettings = await prisma.layoutSettings.findUnique({
       where: { id: 'default' }
     });
 
-    // Eğer ayarlar varsa, JSON'dan parse et ve döndür
-    if (settings) {
-      const parsedSettings = {
-        heroSection: settings.heroSection as unknown as LayoutSettings['heroSection'],
-        featuredProducts: settings.featuredProducts as unknown as LayoutSettings['featuredProducts'],
-        categories: settings.categories as unknown as LayoutSettings['categories'],
-        aboutSection: settings.aboutSection as unknown as LayoutSettings['aboutSection'],
-        contactInfo: settings.contactInfo as unknown as LayoutSettings['contactInfo']
-      };
-      
-      return NextResponse.json(parsedSettings);
+    if (!layoutSettings) {
+      return NextResponse.json({ error: 'Layout ayarları bulunamadı' }, { status: 404 });
     }
 
-    // Eğer ayarlar yoksa, varsayılan ayarları veritabanına kaydet ve döndür
-    try {
-      await prisma.layoutSettings.create({
-        data: {
-          id: 'default',
-          heroSection: defaultLayoutSettings.heroSection as any,
-          featuredProducts: defaultLayoutSettings.featuredProducts as any,
-          categories: defaultLayoutSettings.categories as any,
-          aboutSection: defaultLayoutSettings.aboutSection as any,
-          contactInfo: defaultLayoutSettings.contactInfo as any
-        }
-      });
-      
-      console.log('Varsayılan layout ayarları veritabanına kaydedildi');
-    } catch (createError) {
-      console.error('Varsayılan ayarlar veritabanına kaydedilemedi:', createError);
-      // Veritabanına kaydetme hatası durumunda sessizce devam et
-    }
-
-    return NextResponse.json(defaultLayoutSettings);
+    return NextResponse.json(layoutSettings);
   } catch (error) {
-    console.error('Layout ayarları çekilirken hata oluştu:', error);
-    return NextResponse.json(
-      { error: 'Layout ayarları getirilemedi' },
-      { status: 500 }
-    );
+    console.error('Layout ayarları getirme hatası:', error);
+    return NextResponse.json({ error: 'Layout ayarları getirilemedi' }, { status: 500 });
   }
 }
 
 // PUT endpoint - layout ayarlarını güncelle
-export async function PUT(request: NextRequest) {
+export async function PUT(request: Request) {
   try {
-    const settings = await request.json();
-    
-    await prisma.layoutSettings.update({
+    const settings: LayoutSettings = await request.json();
+
+    const updatedSettings = await prisma.layoutSettings.upsert({
       where: { id: 'default' },
-      data: {
+      update: {
         heroSection: settings.heroSection as any,
         featuredProducts: settings.featuredProducts as any,
         categories: settings.categories as any,
         aboutSection: settings.aboutSection as any,
         contactInfo: settings.contactInfo as any,
         updatedAt: new Date()
+      },
+      create: {
+        id: 'default',
+        heroSection: settings.heroSection as any,
+        featuredProducts: settings.featuredProducts as any,
+        categories: settings.categories as any,
+        aboutSection: settings.aboutSection as any,
+        contactInfo: settings.contactInfo as any,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     });
-    
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json(updatedSettings);
   } catch (error) {
-    console.error('Layout ayarları güncellenirken hata oluştu:', error);
-    return NextResponse.json(
-      { error: 'Layout ayarları güncellenemedi' },
-      { status: 500 }
-    );
+    console.error('Layout ayarları güncelleme hatası:', error);
+    return NextResponse.json({ error: 'Layout ayarları güncellenemedi' }, { status: 500 });
   }
 }
 
 // PATCH endpoint - belirli bir bölümü güncelle
-export async function PATCH(request: NextRequest) {
+export async function PATCH(request: Request) {
   try {
     const { sectionName, sectionData } = await request.json();
-    
-    const settings = await prisma.layoutSettings.findUnique({
+
+    const existingSettings = await prisma.layoutSettings.findUnique({
       where: { id: 'default' }
     });
 
-    if (!settings) {
-      return NextResponse.json(
-        { error: 'Layout ayarları bulunamadı' },
-        { status: 404 }
-      );
+    if (!existingSettings) {
+      return NextResponse.json({ error: 'Layout ayarları bulunamadı' }, { status: 404 });
     }
 
     const updateData: any = {};
     updateData[sectionName] = sectionData;
     updateData.updatedAt = new Date();
 
-    await prisma.layoutSettings.update({
+    const updatedSettings = await prisma.layoutSettings.update({
       where: { id: 'default' },
       data: updateData
     });
-    
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json(updatedSettings);
   } catch (error) {
-    console.error('Layout bölümü güncellenirken hata oluştu:', error);
-    return NextResponse.json(
-      { error: 'Layout bölümü güncellenemedi' },
-      { status: 500 }
-    );
+    console.error('Layout bölümü güncelleme hatası:', error);
+    return NextResponse.json({ error: 'Layout bölümü güncellenemedi' }, { status: 500 });
   }
 } 

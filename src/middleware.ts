@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getToken } from 'next-auth/jwt';
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -116,5 +117,6 @@ export const config = {
      * - public folder
      */
     '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/admin/:path*'
   ],
 }; 

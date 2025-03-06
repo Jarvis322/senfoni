@@ -3,9 +3,27 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Product, fetchProducts, deleteProduct } from "@/services/productService";
 import { FaPlus, FaSearch, FaFilter, FaSort, FaEdit, FaTrash, FaChevronLeft, FaChevronRight, FaSync } from "react-icons/fa";
 import { checkRefreshParam } from "./index";
+import { getProducts, deleteProductFromDB } from "./actions";
+import { formatCurrency } from "@/lib/utils";
+
+// Product tipini tanımlayalım
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  discountedPrice: number | null;
+  currency: string;
+  stock: number;
+  categories: string[];
+  images: string[];
+  brand: string | null;
+  url: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function ProductsManagementPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -38,29 +56,9 @@ export default function ProductsManagementPage() {
     try {
       let data: Product[] = [];
       try {
-        // Use SWR pattern with a cache timeout
-        const cacheKey = `admin_products_${new Date().toISOString().split('T')[0]}`; // Cache key with date for daily refresh
-        const cachedData = sessionStorage.getItem(cacheKey);
-        
-        if (cachedData) {
-          data = JSON.parse(cachedData);
-          console.log(`Using cached data for ${data.length} products`);
-        } else {
-          // API'den ürünleri çek
-          const response = await fetch(`/api/admin/products`, {
-            next: { revalidate: 3600 } // 1 saat cache
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Ürünler getirilemedi: ${response.status} ${response.statusText}`);
-          }
-          
-          data = await response.json();
-          console.log(`Başarıyla ${data.length} ürün yüklendi`);
-          
-          // Cache the data
-          sessionStorage.setItem(cacheKey, JSON.stringify(data));
-        }
+        // Ürünleri veritabanından çek
+        data = await getProducts();
+        console.log(`Başarıyla ${data.length} ürün yüklendi`);
       } catch (fetchError) {
         console.error("Ürünler yüklenirken hata oluştu:", fetchError);
         setError("Ürünler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
@@ -112,7 +110,7 @@ export default function ProductsManagementPage() {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchLower) || 
-        product.description.toLowerCase().includes(searchLower) || 
+        (product.description && product.description.toLowerCase().includes(searchLower)) || 
         product.id.toLowerCase().includes(searchLower)
       );
     }
@@ -170,9 +168,14 @@ export default function ProductsManagementPage() {
   const handleConfirmDelete = async (productId: string) => {
     setDeleting(true);
     try {
-      await deleteProduct(productId, loadProducts);
-      // Silme işlemi başarılı olduktan sonra callback ile ürünler yeniden yükleniyor
-      setDeleteConfirm(null);
+      const success = await deleteProductFromDB(productId);
+      if (success) {
+        // Ürünü yerel state'den kaldır
+        setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+        setFilteredProducts(prevFiltered => prevFiltered.filter(p => p.id !== productId));
+      } else {
+        setError("Ürün silinirken bir hata oluştu");
+      }
     } catch (err) {
       setError("Ürün silinirken bir hata oluştu");
       console.error(err);
@@ -377,7 +380,7 @@ export default function ProductsManagementPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 relative rounded-full overflow-hidden">
                           <Image 
-                            src={product.images[0] || 'https://placehold.co/40x40'} 
+                            src={product.images[0] || '/images/default-product.png'} 
                             alt={product.name}
                             fill
                             className="object-cover"
@@ -403,17 +406,11 @@ export default function ProductsManagementPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Intl.NumberFormat('tr-TR', {
-                          style: 'currency',
-                          currency: product.currency || 'TRY',
-                        }).format(product.price)}
+                        {formatCurrency(product.price, product.currency)}
                       </div>
                       {product.discountedPrice && (
                         <div className="text-xs text-red-600">
-                          İndirimli: {new Intl.NumberFormat('tr-TR', {
-                            style: 'currency',
-                            currency: product.currency || 'TRY',
-                          }).format(product.discountedPrice)}
+                          İndirimli: {formatCurrency(product.discountedPrice, product.currency)}
                         </div>
                       )}
                     </td>
@@ -526,7 +523,7 @@ export default function ProductsManagementPage() {
                 // Sondayız, son 5 sayfayı göster
                 pageNum = totalPages - 4 + i;
               } else {
-                // Ortadayız, mevcut sayfayı ortada göster
+                // Ortadaysız, mevcut sayfayı ortada göster
                 pageNum = currentPage - 2 + i;
               }
               

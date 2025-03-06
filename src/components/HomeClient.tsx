@@ -11,6 +11,12 @@ import CartButton from "./CartButton";
 import AddToCartButton from './AddToCartButton';
 import { useState, useEffect } from "react";
 
+// Helper function to normalize HTML content
+const normalizeHtmlContent = (content: string): string => {
+  if (!content) return "";
+  return content.replace(/<STYLE>/g, '<style>').replace(/<\/STYLE>/g, '</style>');
+};
+
 type LayoutSettings = {
   contactInfo: {
     phone: string;
@@ -389,7 +395,7 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Link 
-                        href="/kategoriler" 
+                        href="/urunler" 
                         className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
                         {layoutSettings.heroSection.buttonText}
@@ -640,7 +646,7 @@ export function HomeClient({ products, layoutSettings }: { products: Product[], 
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">{layoutSettings.aboutSection.title}</h2>
                   <div 
                     className="prose prose-lg text-gray-600 max-w-none"
-                    dangerouslySetInnerHTML={{ __html: layoutSettings.aboutSection.content }}
+                    dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(layoutSettings.aboutSection.content) }}
                   />
                   <div className="mt-8">
                     <Link href="/hakkimizda" className="inline-flex items-center text-red-600 font-medium hover:text-red-700 transition-colors">
@@ -798,10 +804,10 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div className="p-4">
-          <h3 className="text-lg font-medium text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
-            {product.name}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: product.description }} />
+          <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
+          <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+            {product.description ? product.description.replace(/<[^>]*>/g, '') : ''}
+          </p>
           <div className="mt-2 flex items-center justify-between">
             <ProductPrice 
               price={product.price}
