@@ -13,11 +13,11 @@ const nextConfig = {
     },
   },
   images: {
-    domains: [
-      'images.unsplash.com',
-      'static.ticimax.cloud',
-      'placehold.co',
-      'www.maskemuzik.com'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
 }
