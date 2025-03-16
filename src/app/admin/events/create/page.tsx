@@ -16,7 +16,10 @@ export default function CreateEventPage() {
     location: '',
     image: '',
     category: 'Müzik',
-    featured: false
+    featured: false,
+    price: 0,
+    currency: 'TRY',
+    ticketsAvailable: 0
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -47,7 +50,7 @@ export default function CreateEventPage() {
       // Format date for API
       const eventData = {
         ...formData,
-        date: new Date(formData.date)
+        date: formData.date // String olarak gönder
       };
 
       // Submit to API
@@ -222,6 +225,58 @@ export default function CreateEventPage() {
                     Öne Çıkan Etkinlik
                   </label>
                 </div>
+              </div>
+              
+              <div>
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                  Fiyat *
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
+                  Para Birimi *
+                </label>
+                <select
+                  id="currency"
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="TRY">Türk Lirası (TRY)</option>
+                  <option value="USD">Amerikan Doları (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="ticketsAvailable" className="block text-sm font-medium text-gray-700 mb-1">
+                  Bilet Sayısı *
+                </label>
+                <input
+                  type="number"
+                  id="ticketsAvailable"
+                  name="ticketsAvailable"
+                  value={formData.ticketsAvailable}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  step="1"
+                  required
+                />
               </div>
             </div>
             

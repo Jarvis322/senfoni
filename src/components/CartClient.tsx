@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 import { FaTrash, FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from '@/contexts/CartContext';
 import ProductPrice from './ProductPrice';
@@ -13,6 +15,7 @@ interface CartClientProps {
 }
 
 export default function CartClient({ layoutSettings }: CartClientProps) {
+  const router = useRouter();
   const { items, removeItem, updateQuantity, totalItems, totalPrice } = useCart();
   const [couponCode, setCouponCode] = useState('');
   
@@ -25,12 +28,38 @@ export default function CartClient({ layoutSettings }: CartClientProps) {
   // Toplam ödenecek tutar
   const finalTotal = totalPrice - discountAmount;
   
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   // Kupon kodu uygulama
   const handleApplyCoupon = () => {
     if (couponCode.trim() === 'SENFONI10') {
       setCouponApplied(true);
     } else {
       alert('Geçersiz kupon kodu!');
+    }
+  };
+  
+  const handleCheckout = async () => {
+    try {
+      setIsProcessing(true);
+
+      // Generate order ID and number
+      const orderId = uuidv4();
+      const orderNumber = `ORD-${Date.now()}`;
+
+      // Save order data to localStorage
+      localStorage.setItem('cart', JSON.stringify(items));
+      localStorage.setItem('lastOrderId', orderId);
+      localStorage.setItem('lastOrderNumber', orderNumber);
+      localStorage.setItem('selectedCurrency', 'TRY');
+
+      // Navigate to payment page
+      router.push('/odeme');
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Ödeme sayfasına yönlendirilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -229,12 +258,20 @@ export default function CartClient({ layoutSettings }: CartClientProps) {
                       )}
                     </div>
                     
-                    <Link
-                      href="/odeme"
-                      className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    <button
+                      onClick={handleCheckout}
+                      disabled={isProcessing || items.length === 0}
+                      className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Ödemeye Geç
-                    </Link>
+                      {isProcessing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                          İşleniyor...
+                        </>
+                      ) : (
+                        'Ödemeye Geç'
+                      )}
+                    </button>
                     
                     <div className="mt-4 text-center">
                       <p className="text-xs text-gray-500">

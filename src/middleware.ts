@@ -17,6 +17,13 @@ const adminRoutes = [
   '/admin'
 ];
 
+// Statik dosyalar için önbellek süreleri (24 saat)
+const STATIC_FILE_CACHE_MAX_AGE = 60 * 60 * 24
+// API yanıtları için önbellek süreleri (1 saat)
+const API_CACHE_MAX_AGE = 60 * 60
+// Sayfa önbellekleri için yeniden doğrulama süresi (1 gün)
+const REVALIDATE_TIME = 60 * 60 * 24
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -97,7 +104,63 @@ export async function middleware(request: NextRequest) {
     }
     
     // Continue to the protected route
-    return NextResponse.next();
+    const response = NextResponse.next();
+
+    // İstek yolu - pathname zaten yukarıda tanımlandı, tekrar tanımlamaya gerek yok
+    // const pathname = request.nextUrl.pathname
+
+    // Statik dosyalar için önbellek başlıkları
+    if (
+      pathname.startsWith('/_next/') ||
+      pathname.startsWith('/images/') ||
+      pathname.startsWith('/fonts/') ||
+      pathname.endsWith('.ico') ||
+      pathname.endsWith('.png') ||
+      pathname.endsWith('.jpg') ||
+      pathname.endsWith('.jpeg') ||
+      pathname.endsWith('.svg') ||
+      pathname.endsWith('.css') ||
+      pathname.endsWith('.js')
+    ) {
+      response.headers.set(
+        'Cache-Control',
+        `public, max-age=${STATIC_FILE_CACHE_MAX_AGE}, s-maxage=${STATIC_FILE_CACHE_MAX_AGE}, stale-while-revalidate=${REVALIDATE_TIME}`
+      )
+    }
+    // API istekleri için önbellek başlıkları
+    else if (pathname.startsWith('/api/')) {
+      // POST istekleri için önbellek devre dışı
+      if (request.method === 'POST') {
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+        response.headers.set('Pragma', 'no-cache')
+        response.headers.set('Expires', '0')
+      } else {
+        response.headers.set(
+          'Cache-Control',
+          `public, max-age=${API_CACHE_MAX_AGE}, s-maxage=${API_CACHE_MAX_AGE}, stale-while-revalidate=${REVALIDATE_TIME}`
+        )
+      }
+    }
+    // Diğer sayfalar için önbellek başlıkları
+    else {
+      response.headers.set(
+        'Cache-Control',
+        'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+      )
+    }
+
+    // Güvenlik başlıkları
+    response.headers.set('X-DNS-Prefetch-Control', 'on')
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    )
+
+    return response;
   } catch (error) {
     // If token verification fails, redirect to login
     const url = new URL('/giris', request.url);
@@ -114,9 +177,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - sw.js (service worker)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js).*)',
     '/admin/:path*'
   ],
 }; 

@@ -1,77 +1,114 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PayTRService } from '@/services/PayTRService';
 import { getServerSession } from 'next-auth';
-import { prisma } from '@/lib/prisma';
+import { authOptions } from '@/lib/auth';
+import PayTRService from '@/services/PayTRService';
+import { formatPriceForPayTR } from '@/services/currencyService';
 
-export async function POST(request: NextRequest) {
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CustomerInfo {
+  email: string;
+  name: string;
+  phone: string;
+  address: string;
+}
+
+export async function POST(request: Request) {
   try {
-    // Oturum kontrolü
-    const session = await getServerSession();
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const session = await getServerSession(authOptions);
+    const body = await request.json();
+    const { orderId, cartItems, totalAmount, currency, customerInfo } = body;
+
+    // Giriş yapmış kullanıcı veya misafir bilgileri kontrolü
+    if (!session?.user && !customerInfo) {
+      return NextResponse.json(
+        { error: 'Kullanıcı bilgileri eksik' },
+        { status: 400 }
+      );
     }
 
-    // İstek verilerini al
-    const data = await request.json();
-    const { orderId, shippingAddress } = data;
+    // Sepet kontrolü
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      return NextResponse.json(
+        { error: 'Geçersiz sepet' },
+        { status: 400 }
+      );
+    }
 
-    // Sipariş bilgilerini veritabanından al
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: true
-      }
+    // Tutar kontrolü
+    if (!totalAmount || totalAmount <= 0) {
+      return NextResponse.json(
+        { error: 'Geçersiz tutar' },
+        { status: 400 }
+      );
+    }
+
+    // Para birimi kontrolü
+    if (!currency || !['TRY', 'USD', 'EUR'].includes(currency)) {
+      return NextResponse.json(
+        { error: 'Geçersiz para birimi' },
+        { status: 400 }
+      );
+    }
+
+    // PayTR için sepet öğelerini hazırla
+    const basketItems = cartItems.map((item: CartItem) => ({
+      name: item.name,
+      price: formatPriceForPayTR(item.price),
+      quantity: item.quantity
+    }));
+
+    // PayTR token'ı oluştur
+    const token = await PayTRService.createPaymentToken({
+      userId: session?.user?.id || 'guest',
+      email: session?.user?.email || customerInfo.email,
+      userName: session?.user?.name || customerInfo.name,
+      userPhone: customerInfo?.phone,
+      address: session?.user?.address || customerInfo.address,
+      basketItems,
+      totalAmount: formatPriceForPayTR(totalAmount),
+      currency,
+      merchantOid: orderId,
+      userIp: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1',
+      userAgent: request.headers.get('user-agent') || 'Unknown'
     });
 
-    if (!order) {
-      return new NextResponse('Order not found', { status: 404 });
+    if (!token) {
+      throw new Error('PayTR token oluşturulamadı');
     }
 
-    // Kullanıcı IP adresini al
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const userIp = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
+    console.log('PayTR token created:', token);
 
-    // Sepet öğelerini hazırla
-    const items = order.items as Array<{ name: string; price: number; quantity: number }>;
-    const basket = items.map(item => [
-      item.name,
-      (item.price * 100).toString(),
-      item.quantity.toString()
-    ]);
-
-    // PayTR servisini başlat
-    const paytr = new PayTRService();
-
-    // Ödeme formu için parametreleri hazırla
-    const params = {
-      merchant_id: process.env.PAYTR_MERCHANT_ID!,
-      merchant_key: process.env.PAYTR_MERCHANT_KEY!,
-      merchant_salt: process.env.PAYTR_MERCHANT_SALT!,
-      email: order.user.email,
-      payment_amount: Math.round(order.totalAmount * 100), // Kuruş cinsinden
-      merchant_oid: order.id,
-      user_name: `${order.user.name || ''}`,
-      user_address: shippingAddress,
-      user_phone: order.user.phone || '',
-      merchant_ok_url: 'https://senfonimuzikaletleri.com/siparis/basarili',
-      merchant_fail_url: 'https://senfonimuzikaletleri.com/siparis/basarisiz',
-      user_basket: JSON.stringify(basket),
-      user_ip: userIp,
-      currency: 'TL',
-      test_mode: process.env.NODE_ENV === 'production' ? '0' : '1'
-    };
-
-    // Ödeme formunu oluştur
-    const token = await paytr.createPaymentForm(params);
-
-    // İframe URL'sini döndür
+    // Başarılı yanıt
     return NextResponse.json({
-      status: 'success',
-      iframeUrl: `https://www.paytr.com/odeme/guvenli/${token}`
+      success: true,
+      formUrl: `https://www.paytr.com/odeme/guvenli/${token}`
     });
 
   } catch (error) {
     console.error('Payment creation error:', error);
-    return new NextResponse('Payment creation failed', { status: 500 });
+
+    let status = 500;
+    let errorMessage = 'Ödeme işlemi başlatılamadı';
+
+    if (error instanceof Error) {
+      if (error.message.includes('PAYTR-401')) {
+        errorMessage = 'PayTR kimlik doğrulama hatası';
+        status = 401;
+      } else if (error.message.includes('PAYTR-400')) {
+        errorMessage = 'PayTR parametre hatası';
+        status = 400;
+      }
+    }
+
+    return NextResponse.json(
+      { error: errorMessage },
+      { status }
+    );
   }
 } 

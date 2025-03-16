@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import PaymentForm from '@/components/PaymentForm';
 import HeaderCurrencySelector from '@/components/HeaderCurrencySelector';
 import CartButton from '@/components/CartButton';
@@ -40,6 +41,55 @@ interface PaymentClientProps {
 }
 
 export default function PaymentClient({ layoutSettings }: PaymentClientProps) {
+  const router = useRouter();
+  const [orderData, setOrderData] = useState<{
+    orderId: string;
+    orderNumber: string;
+    totalAmount: number;
+    currency: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const loadOrderData = () => {
+      const cartData = localStorage.getItem('cart');
+      const orderNumber = localStorage.getItem('lastOrderNumber');
+      const orderId = localStorage.getItem('lastOrderId');
+      const currency = localStorage.getItem('selectedCurrency') || 'TRY';
+
+      if (!cartData || !orderNumber || !orderId) {
+        router.push('/sepet');
+        return;
+      }
+
+      try {
+        const cart = JSON.parse(cartData);
+        const totalAmount = cart.reduce((total: number, item: any) => total + (item.price * item.quantity), 0);
+
+        if (isSubscribed) {
+          setOrderData({
+            orderId,
+            orderNumber,
+            totalAmount,
+            currency
+          });
+        }
+      } catch (error) {
+        console.error('Cart data parsing error:', error);
+        if (isSubscribed) {
+          router.push('/sepet');
+        }
+      }
+    };
+
+    loadOrderData();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [router]);
+
   const {
     showHeader,
     showFooter,
@@ -50,12 +100,18 @@ export default function PaymentClient({ layoutSettings }: PaymentClientProps) {
       email: 'info@senfonimusic.com',
       address: 'İstanbul, Türkiye',
       socialMedia: {
-        facebook: 'https://facebook.com',
-        instagram: 'https://instagram.com',
-        twitter: 'https://twitter.com'
+        facebook: 'https://facebook.com/senfonimuzikaletleri',
+        instagram: 'https://instagram.com/senfonimuzikaletleri',
+        twitter: 'https://twitter.com/senfonimuzik'
       }
     }
   } = layoutSettings;
+
+  if (!orderData) {
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-red-500"></div>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -130,13 +186,24 @@ export default function PaymentClient({ layoutSettings }: PaymentClientProps) {
             <p className="mt-2 text-gray-600">Lütfen aşağıdaki formu doldurun ve ödemeyi tamamlayın.</p>
           </div>
           
-          <PaymentForm />
+          <PaymentForm
+            orderId={orderData.orderId}
+            orderNumber={orderData.orderNumber}
+            totalAmount={orderData.totalAmount}
+            currency={orderData.currency}
+          />
         </div>
         
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>Ödemeleriniz güvenle gerçekleştirilmektedir.</p>
           <div className="mt-4 flex justify-center">
-            <img src="/images/payment-methods.png" alt="Ödeme Yöntemleri" className="h-8" />
+            <Image 
+              src="/images/odeme-yontemleri.png" 
+              alt="Ödeme Yöntemleri" 
+              width={200}
+              height={32}
+              className="h-8 w-auto"
+            />
           </div>
         </div>
       </main>

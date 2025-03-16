@@ -1,25 +1,38 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from "next/font/google";
-import { CartProvider } from '@/contexts/CartContext';
-import { NotificationProvider } from '@/components/NotificationProvider';
-import { LayoutProvider } from '@/contexts/LayoutContext';
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { Inter } from 'next/font/google'
+import { Providers } from '@/app/providers'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import { headers } from 'next/headers'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Force static rendering and caching
+export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
-  title: 'Senfoni Müzik - Müzik Aletleri ve Ekipmanları',
-  description: 'Senfoni Müzik - Türkiye\'nin en kaliteli müzik aletleri ve ekipmanları mağazası. Piyanolar, gitarlar, yaylı ve vurmalı çalgılar için en iyi fiyatlar.',
-  keywords: 'müzik aletleri, piyano, gitar, yaylı çalgılar, vurmalı çalgılar, müzik ekipmanları, konserler, etkinlikler',
-  authors: [{ name: 'Senfoni Müzik' }],
+  title: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+  description: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+  keywords: [
+    'müzik aletleri',
+    'gitar',
+    'piyano',
+    'keman',
+    'davul',
+    'bateri',
+    'müzik mağazası',
+    'enstrüman',
+    'müzik ekipmanları'
+  ],
+  authors: [
+    {
+      name: 'Senfoni Müzik',
+      url: 'https://www.senfonimuzikaletleri.com'
+    }
+  ],
   creator: 'Senfoni Müzik',
   publisher: 'Senfoni Müzik',
   formatDetection: {
@@ -27,25 +40,19 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://senfoni.vercel.app'),
-  alternates: {
-    canonical: '/',
-    languages: {
-      'tr-TR': '/',
-    },
-  },
+  metadataBase: new URL('https://www.senfonimuzikaletleri.com'),
   openGraph: {
-    title: 'Senfoni Müzik - Müzik Aletleri ve Ekipmanları',
-    description: 'Senfoni Müzik - Türkiye\'nin en kaliteli müzik aletleri ve ekipmanları mağazası.',
-    url: 'https://senfoni.vercel.app',
+    title: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+    description: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+    url: 'https://www.senfonimuzikaletleri.com',
     siteName: 'Senfoni Müzik',
     images: [
       {
-        url: '/logo.png',
-        width: 800,
-        height: 600,
-        alt: 'Senfoni Müzik Logo',
-      },
+        url: 'https://www.senfonimuzikaletleri.com/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Senfoni Müzik - Müzik Aletleri Mağazası'
+      }
     ],
     locale: 'tr_TR',
     type: 'website',
@@ -53,23 +60,39 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    nocache: true,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
   },
   icons: {
-    icon: '/logo-ikon.png',
-    shortcut: '/logo-ikon.png',
-    apple: '/logo-ikon.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+    description: 'Senfoni Müzik - Müzik Aletleri Mağazası',
+    creator: '@senfonimuzik',
+    images: ['https://www.senfonimuzikaletleri.com/images/og-image.jpg'],
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
   },
   verification: {
     google: 'google-site-verification-code',
+    yandex: 'yandex-verification-code',
+    yahoo: 'yahoo-site-verification-code',
   },
-  category: 'e-commerce',
 }
 
 export default function RootLayout({
@@ -82,15 +105,16 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta httpEquiv="Cache-Control" content="public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <NotificationProvider>
-          <CartProvider>
-            <LayoutProvider>
-              {children}
-            </LayoutProvider>
-          </CartProvider>
-        </NotificationProvider>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${inter.className} antialiased min-h-screen flex flex-col`}>
+        <Providers>
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   )

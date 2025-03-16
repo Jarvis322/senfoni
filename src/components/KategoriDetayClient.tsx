@@ -325,8 +325,8 @@ export default function KategoriDetayClient({ layoutSettings, category, products
               <div className="flex items-center gap-2">
                 <span className="text-gray-600 text-sm">Sırala:</span>
                 <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
                   className="border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="featured">Öne Çıkanlar</option>

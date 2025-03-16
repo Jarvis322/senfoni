@@ -1,118 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { PayTRService } from '@/services/PayTRService';
+import prisma from '@/lib/prisma';
+import { OrderStatus } from '@prisma/client';
 
-// Enum değerlerini doğrudan tanımla
-enum OrderStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED'
-}
-
-enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED'
-}
+// PayTR servisini import et
+const PayTRService = require('@/services/PayTRService');
 
 export async function POST(request: NextRequest) {
   try {
-    // PayTR'nin IP adreslerini kontrol et
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip');
-    const allowedIps = ['193.111.162.0/24', '193.111.163.0/24']; // PayTR'nin IP aralıkları
-    
-    // IP kontrolü (production'da aktif edilmeli)
-    // if (!allowedIps.some(ip => isIpInRange(clientIp, ip))) {
-    //   console.error('Unauthorized IP:', clientIp);
-    //   return new NextResponse('Unauthorized IP', { status: 403 });
-    // }
-
-    const data = await request.formData();
-    
     // PayTR'den gelen verileri al
-    const merchantOid = data.get('merchant_oid') as string;
-    const status = data.get('status') as string;
-    const totalAmount = data.get('total_amount') as string;
-    const hash = data.get('hash') as string;
-    
-    // PayTR servisini başlat
-    const paytr = new PayTRService();
-    
+    const formData = await request.formData();
+    const merchantOid = formData.get('merchant_oid') as string;
+    const status = formData.get('status') as string;
+    const totalAmount = formData.get('total_amount') as string;
+    const hash = formData.get('hash') as string;
+
+    console.log('PayTR callback received:', {
+      merchantOid,
+      status,
+      totalAmount,
+      hash
+    });
+
+    // Gerekli alanları kontrol et
+    if (!merchantOid || !status || !totalAmount || !hash) {
+      return NextResponse.json({ status: 'failed', message: 'Eksik parametreler' }, { status: 400 });
+    }
+
     // Hash doğrulaması yap
-    const isValid = paytr.verifyHash({
-      merchant_oid: merchantOid,
-      status: status,
-      total_amount: totalAmount,
-      hash: hash
+    const isValid = await PayTRService.verifyCallback({
+      merchantOid,
+      status,
+      totalAmount: parseInt(totalAmount, 10),
+      hash
     });
-    
+
     if (!isValid) {
-      console.error('PayTR hash doğrulaması başarısız');
-      return new NextResponse('Hash validation failed', { status: 400 });
+      console.error('Invalid hash in PayTR callback');
+      return NextResponse.json({ status: 'failed', message: 'Geçersiz hash' }, { status: 400 });
     }
-    
-    // Sipariş durumunu güncelle
-    if (status === 'success') {
-      await prisma.order.update({
-        where: { id: merchantOid },
-        data: { 
-          status: 'PROCESSING',
-          paymentStatus: 'PAID',
-          paymentDetails: {
-            provider: 'PAYTR',
-            transactionId: data.get('transaction_id') as string,
-            amount: parseFloat(totalAmount) / 100, // PayTR kuruş olarak gönderir
-            date: new Date(),
-            status: 'success'
-          }
-        }
-      });
-    } else {
-      await prisma.order.update({
-        where: { id: merchantOid },
-        data: { 
-          status: 'CANCELLED',
-          paymentStatus: 'FAILED',
-          paymentDetails: {
-            provider: 'PAYTR',
-            transactionId: data.get('transaction_id') as string || '',
-            amount: parseFloat(totalAmount) / 100,
-            date: new Date(),
-            status: 'failed',
-            errorMessage: data.get('failed_reason_msg') as string || 'Ödeme başarısız'
-          }
-        }
-      });
-    }
-    
-    // PayTR'ye başarılı yanıt gönder
-    return new NextResponse('OK', { 
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
+
+    // Siparişi güncelle
+    const order = await prisma.order.findUnique({
+      where: { id: merchantOid }
     });
-    
+
+    if (!order) {
+      console.error(`Order not found: ${merchantOid}`);
+      return NextResponse.json({ status: 'failed', message: 'Sipariş bulunamadı' }, { status: 404 });
+    }
+
+    // Ödeme durumuna göre sipariş durumunu güncelle
+    let orderStatus: OrderStatus;
+    if (status === 'success') {
+      orderStatus = OrderStatus.PROCESSING;
+    } else {
+      orderStatus = OrderStatus.CANCELLED;
+    }
+
+    await prisma.order.update({
+      where: { id: merchantOid },
+      data: { status: orderStatus, paymentStatus: status === 'success' ? 'PAID' : 'FAILED' }
+    });
+
+    console.log(`Order ${merchantOid} updated with status: ${orderStatus}`);
+
+    // PayTR'ye başarılı yanıt döndür
+    return NextResponse.json({ status: 'success' });
   } catch (error) {
-    console.error('PayTR callback hatası:', error);
-    return new NextResponse('Error', { status: 500 });
+    console.error('PayTR callback error:', error);
+    return NextResponse.json({ status: 'failed', message: 'İşlem hatası' }, { status: 500 });
   }
 }
 
+// CORS için OPTIONS metodu
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '86400'
-    }
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
   });
 }
 

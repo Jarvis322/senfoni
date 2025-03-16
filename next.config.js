@@ -1,17 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  output: 'standalone',
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
+  reactStrictMode: true,
   images: {
     remotePatterns: [
       {
@@ -19,7 +8,26 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    domains: ['static.ticimax.cloud', 'www.paytr.com'],
   },
-}
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
+      },
+    ]
+  },
+};
 
-module.exports = nextConfig 
+module.exports = nextConfig; 
